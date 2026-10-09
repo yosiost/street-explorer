@@ -12,7 +12,7 @@ full design.
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5180
 npm run build      # static site in dist/, host anywhere (GitHub Pages, Netlify…)
 npm run preview    # serve dist/ locally
 ```
@@ -65,7 +65,7 @@ npm run lint
 npm run typecheck
 
 # End to end (Playwright + Chromium; run `npx playwright install chromium` once)
-npm run build && npx vite preview --port 4179 &
+npm run build && npm run preview &   # http://localhost:4179
 npm run e2e        # Overpass served from fixtures: deterministic
 npm run e2e:live   # real Overpass: timings depend on server load
 ```
