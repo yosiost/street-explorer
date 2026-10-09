@@ -54,15 +54,20 @@ export async function loadCityRaw(
     RunQueryOptions,
     'onRetry'
   > = {},
-): Promise<CityRaw> {
+): Promise<CityRaw & { fromCache: boolean }> {
   const { signal, onStep, onRetry } = opts;
+  let fetched = false;
+  const fetchQuery = (q: string) => {
+    fetched = true;
+    return runQuery(q, { signal, onRetry });
+  };
   onStep?.('boundary');
   const boundary = await cached(cacheKeys.boundary(relationId), () =>
-    runQuery(boundaryQuery(relationId), { signal, onRetry }),
+    fetchQuery(boundaryQuery(relationId)),
   );
   onStep?.('streets');
   const streets = await cached(cacheKeys.streets(relationId), () =>
-    runQuery(streetsQuery(relationId), { signal, onRetry }),
+    fetchQuery(streetsQuery(relationId)),
   );
-  return { boundary, streets };
+  return { boundary, streets, fromCache: !fetched };
 }

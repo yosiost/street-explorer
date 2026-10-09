@@ -15,10 +15,13 @@ export const FOOTBALL_PITCH_M = 105;
 
 // --- Data acquisition ---
 
+// Main instance first, then public mirrors that work from a browser (CORS). Checked
+// 2026-10-09: kumi.systems was returning 500, so it is tried last; private.coffee answers
+// curl but fails CORS in Chromium, so it is not listed.
 export const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
 ];
 export const OVERPASS_TIMEOUT_MS = 120_000;
 export const OVERPASS_BUSY_WAIT_MS = 5_000;

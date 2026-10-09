@@ -27,12 +27,13 @@ export function parseCityList(res: OverpassResponse): City[] {
 
 /** Case- and punctuation-tolerant match for the type-ahead. */
 export function matchesCity(city: City, query: string): boolean {
-  const q = simplify(query);
+  const q = searchKey(query);
   if (!q) return true;
-  return simplify(city.name).includes(q) || simplify(city.nameEn ?? '').includes(q);
+  return searchKey(city.name).includes(q) || searchKey(city.nameEn ?? '').includes(q);
 }
 
-function simplify(s: string): string {
+/** Lowercased, without spaces, dashes or quote marks, for forgiving substring search. */
+export function searchKey(s: string): string {
   return s
     .toLowerCase()
     .replace(/[-–־'"׳״’”\s]/g, '')

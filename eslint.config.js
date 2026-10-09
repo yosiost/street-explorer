@@ -13,4 +13,9 @@ export default tseslint.config(
       globals: { ...globals.browser, ...globals.worker },
     },
   },
+  {
+    // Playwright scripts run in Node; their page.evaluate callbacks run in the browser.
+    files: ['e2e/**'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 );

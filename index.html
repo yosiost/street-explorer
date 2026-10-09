@@ -3,39 +3,94 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="בוחרים עיר ורואים את כל הרחובות שלה, מהארוך לקצר" />
     <title>חוקרי הרחובות</title>
   </head>
   <body>
     <header class="app-header">
       <h1 class="app-title">חוקרי הרחובות</h1>
-      <form class="picker" id="picker">
-        <label class="visually-hidden" for="city-select">בחרו עיר</label>
-        <!-- Placeholder until milestone 2 loads the municipality list from Overpass. -->
-        <select id="city-select" disabled>
-          <option>כפר סבא</option>
-        </select>
+      <form class="picker" id="picker" autocomplete="off">
+        <div class="combo">
+          <label class="visually-hidden" for="city-input">בחרו עיר</label>
+          <input
+            id="city-input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="city-listbox"
+            placeholder="טוען ערים…"
+            disabled
+          />
+          <ul id="city-listbox" role="listbox" aria-label="ערים" hidden></ul>
+        </div>
         <button type="submit" id="map-it" disabled>הצג במפה</button>
+        <label class="regional-toggle">
+          <input type="checkbox" id="show-regional" />
+          <span>כולל מועצות אזוריות</span>
+        </label>
       </form>
     </header>
 
     <main class="city-view">
       <section class="map-pane" aria-label="מפה">
         <div id="map"></div>
+
+        <div class="overlay" id="loading-panel" role="status" aria-live="polite" hidden>
+          <div class="overlay-card">
+            <ol class="steps" id="loading-steps"></ol>
+            <p class="note" id="loading-note"></p>
+            <button type="button" id="cancel-load" class="secondary">ביטול</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="error-panel" role="alert" hidden>
+          <div class="overlay-card">
+            <p id="error-text"></p>
+            <button type="button" id="retry-load">נסו שוב</button>
+          </div>
+        </div>
       </section>
+
       <aside class="list-pane" aria-label="רשימת רחובות">
         <div class="list-header">
-          <h2 id="city-name">כפר סבא</h2>
-          <p class="list-summary" id="list-summary">בחרו עיר ולחצו „הצג במפה״</p>
+          <h2 id="city-name"></h2>
+          <p class="list-summary" id="list-summary"></p>
+          <div class="list-controls" hidden>
+            <div class="sort-toggle" role="group" aria-label="מיון">
+              <button type="button" data-sort="desc" aria-pressed="true">הכי ארוך קודם</button>
+              <button type="button" data-sort="asc" aria-pressed="false">הכי קצר קודם</button>
+            </div>
+            <label class="visually-hidden" for="street-filter">חיפוש רחוב</label>
+            <input id="street-filter" type="search" placeholder="חיפוש רחוב…" />
+          </div>
         </div>
         <ol class="street-list" id="street-list"></ol>
+        <div class="debug-panel" id="debug-panel" hidden></div>
       </aside>
     </main>
 
     <footer class="app-footer">
-      נתונים:
-      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener"
-        >© תורמי OpenStreetMap</a
-      >
+      <details class="how">
+        <summary>איך אנחנו מודדים?</summary>
+        <div class="how-body">
+          <p>
+            הנתונים מגיעים מ־OpenStreetMap, מפה שמתנדבים מציירים. רחוב הוא כל הקטעים בעיר שיש להם
+            אותו שם. כשלשדרה יש שני מסלולים נפרדים, סופרים אותה פעם אחת. חלקים שיוצאים מגבול העיר לא
+            נספרים, וכיכרות לא נכנסות לאורך.
+          </p>
+          <p>
+            המספרים טובים כמו המפה. לפעמים הם יוצאים בכמה עשרות מטרים יותר או פחות. רחובות קצרים
+            מאוד מסומנים בנקודה, כי לפעמים הם רק שארית של מיפוי ולא רחוב אמיתי.
+          </p>
+        </div>
+      </details>
+      <span class="attribution">
+        נתונים:
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener"
+          >© תורמי OpenStreetMap</a
+        >
+      </span>
     </footer>
 
     <script type="module" src="/src/main.ts"></script>
