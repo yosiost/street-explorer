@@ -9,30 +9,38 @@ const collator = new Intl.Collator('he');
 
 export interface CityListResult {
   cities: City[];
-  source: 'cache' | 'network' | 'snapshot';
+  source: 'cache' | 'snapshot';
+  /** With the snapshot: the list from Overpass once it arrives (null if that failed). */
+  refresh?: Promise<City[] | null>;
+}
+
+function snapshotCities(): City[] {
+  return [...(snapshot as City[])].sort((a, b) => collator.compare(a.name, b.name));
 }
 
 /**
- * City list: cache, then Overpass, then the snapshot bundled at build time so the picker
- * still works when Overpass is down.
+ * City list: from the cache, else the snapshot bundled at build time right away, so the
+ * app never waits for Overpass to start. In the snapshot case the fresh list is fetched in
+ * the background and cached for next time.
  */
 export async function loadCityList(): Promise<CityListResult> {
   const hit = await cacheGet<OverpassResponse>(cacheKeys.cityList);
   if (hit) return { cities: parseCityList(hit), source: 'cache' };
-  try {
-    const res = await runQuery(cityListQuery(), { rounds: 1 });
-    await cacheSet(cacheKeys.cityList, res);
-    const cities = parseCityList(res);
-    console.info(
-      `[cities] ${cities.length} admin_level=8 relations from Overpass, e.g.`,
-      cities.slice(0, 5).map((c) => `${c.name} (${c.id})`),
-    );
-    return { cities, source: 'network' };
-  } catch (err) {
-    console.warn('[cities] Overpass failed, using bundled snapshot', err);
-    const cities = [...(snapshot as City[])].sort((a, b) => collator.compare(a.name, b.name));
-    return { cities, source: 'snapshot' };
-  }
+  const refresh = runQuery(cityListQuery(), { rounds: 1 })
+    .then(async (res) => {
+      await cacheSet(cacheKeys.cityList, res);
+      const cities = parseCityList(res);
+      console.info(
+        `[cities] ${cities.length} admin_level=8 relations from Overpass, e.g.`,
+        cities.slice(0, 5).map((c) => `${c.name} (${c.id})`),
+      );
+      return cities;
+    })
+    .catch((err) => {
+      console.warn('[cities] Overpass failed, keeping the bundled list', err);
+      return null;
+    });
+  return { cities: snapshotCities(), source: 'snapshot', refresh };
 }
 
 export interface CityRaw {

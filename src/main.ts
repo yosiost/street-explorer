@@ -283,8 +283,17 @@ async function isAvailableOffline(id: number): Promise<boolean> {
   );
 }
 
-void loadCityList().then(async ({ cities, source }) => {
+void loadCityList().then(async ({ cities, source, refresh }) => {
   if (source === 'snapshot') console.info('[cities] using bundled list');
+  // A fresh list from Overpass replaces the bundled one when it arrives.
+  void refresh?.then((fresh) => {
+    if (!fresh?.length) return;
+    const picked = store.get().pickedCity;
+    store.set({
+      cities: fresh,
+      pickedCity: (picked && fresh.find((c) => c.id === picked.id)) ?? picked,
+    });
+  });
   const fallback = cities.find((c) => c.id === DEFAULT_CITY_ID) ?? cities[0] ?? null;
   // Reopen on the last city when it is still cached, otherwise on the default city, which
   // ships with the app: either way the map shows streets without waiting for a server.
