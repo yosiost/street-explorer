@@ -107,20 +107,18 @@ async function loadCity(city: City) {
   const setStep = (step: LoadingStep, retrying?: string) => {
     if (job === j) store.set({ status: { kind: 'loading', step, startedAt, retrying } });
   };
-  setStep('boundary');
+  setStep('download');
 
   try {
     const processedKey = cacheKeys.processed(city.id, PIPELINE_VERSION);
     let result = await cacheGet<CityResult>(processedKey);
     let source: State['resultSource'] = 'processed-cache';
     if (!result) {
-      let step: LoadingStep = 'boundary';
       const raw = await loadCityRaw(city.id, {
         signal: j.abort.signal,
-        onStep: (s) => setStep((step = s)),
         onRetry: ({ endpoint, reason }) => {
           console.info(`[overpass] ${new URL(endpoint).host}: ${reason}; trying again`);
-          setStep(step, reason);
+          setStep('download', reason);
         },
       });
       setStep('compute');

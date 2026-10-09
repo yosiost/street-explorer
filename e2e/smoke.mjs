@@ -30,9 +30,10 @@ async function routeOverpass(page, mode = 'ok') {
     if (mode === 'slow') await new Promise((r) => setTimeout(r, 4000));
     const body = q.includes('ISO3166')
       ? cities
-      : q.includes('map_to_area')
-        ? JSON.stringify(fixture.streets)
-        : JSON.stringify(fixture.boundary);
+      : JSON.stringify({
+          ...fixture.streets,
+          elements: [...fixture.boundary.elements, ...fixture.streets.elements],
+        });
     await route.fulfill({ status: 200, contentType: 'application/json', body }).catch(() => {});
   });
 }

@@ -70,7 +70,9 @@ export class MapView {
       this.streets.set(street.id, street);
       this.group.addLayer(line);
     }
-    this.map.fitBounds(this.boundary.getBounds(), { padding: [12, 12] });
+    // No animation: a zoom animation still running when the user picks a street would snap
+    // the map back to the whole city as it finishes.
+    this.map.fitBounds(this.boundary.getBounds(), { padding: [12, 12], animate: false });
   }
 
   clear() {

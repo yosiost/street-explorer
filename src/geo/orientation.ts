@@ -1,7 +1,7 @@
 import { WINDING_EIGEN_RATIO, WINDING_EXTENT_RATIO, WINDING_MIN_LENGTH_M } from '../config';
 import type { XY } from './geometry';
 
-export type Orientation = 'N-S' | 'E-W' | 'NE-SW' | 'NW-SE' | 'WINDING';
+export type Orientation = 'N-S' | 'E-W' | 'NE-SW' | 'NW-SE' | 'WINDING' | 'BRANCHED';
 
 export const ORIENTATION_LABELS: Record<Orientation, string> = {
   'N-S': 'צפון–דרום',
@@ -9,6 +9,7 @@ export const ORIENTATION_LABELS: Record<Orientation, string> = {
   'E-W': 'מזרח–מערב',
   'NW-SE': 'צפון-מערב – דרום-מזרח',
   WINDING: 'מתפתל',
+  BRANCHED: 'מסתעף',
 };
 
 export interface WeightedPoint {
@@ -25,7 +26,7 @@ export interface OrientationResult {
   extentRatio: number;
 }
 
-export function bucketBearing(deg: number): Exclude<Orientation, 'WINDING'> {
+export function bucketBearing(deg: number): Exclude<Orientation, 'WINDING' | 'BRANCHED'> {
   const b = ((deg % 180) + 180) % 180;
   if (b < 22.5 || b >= 157.5) return 'N-S';
   if (b < 67.5) return 'NE-SW';

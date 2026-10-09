@@ -45,7 +45,7 @@ export const HIGHWAY_TYPES = [
 
 export const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Bump when the geo pipeline changes; invalidates cached processed results only.
-export const PIPELINE_VERSION = 2;
+export const PIPELINE_VERSION = 3;
 
 // --- Street model ---
 

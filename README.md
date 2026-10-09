@@ -24,7 +24,8 @@ policy requires a valid Referer.
 
 1. Type a city name (Hebrew or English) and press **הצג במפה**. Regional councils are
    hidden unless you tick **כולל מועצות אזוריות**.
-2. The first load of a city takes 5–30 s, sometimes more when Overpass is busy. After
+2. The first load of a city (one Overpass request for boundary and streets) takes
+   5–30 s, sometimes more when Overpass is busy. After
    that it comes from the browser cache (IndexedDB, 30 days) and loads instantly.
 3. Click a street in the list to highlight and zoom to it, or click a street on the map to
    find it in the list. **Esc** or a click on empty map clears the selection.
@@ -49,8 +50,9 @@ A "street" is every counted way in the city that shares a normalized name. The p
    directions within 35 m of each other, that stretch is counted once.
 6. **Length** is geodesic (Turf). Streets under 30 m are marked `•` as possible mapping
    fragments.
-7. **Orientation** comes from PCA over points sampled every 10 m. A weak main axis, or a
-   short spread along it, gives "מתפתל" (winding).
+7. **Orientation** comes from PCA over points sampled every 10 m. When there is no single
+   axis, a street with three or more loose ends (T, Y, H shapes) is "מסתעף" (branched),
+   and anything else is "מתפתל" (winding).
 
 All thresholds are in `src/config.ts`. When the pipeline changes, bump `PIPELINE_VERSION`
 to invalidate cached results. Raw Overpass responses stay cached.
@@ -69,8 +71,9 @@ npm run e2e:live   # real Overpass: timings depend on server load
 ```
 
 The fixture `test/fixtures/kfar-saba.json` is a real Overpass response (OSM data as of
-2026-10-09). To refresh it, re-run the boundary and streets queries from
-`src/data/overpass.ts` for relation 1383631.
+2026-10-09), stored as separate boundary and streets responses. To refresh it, run
+`cityQuery(1383631)` from `src/data/overpass.ts` and split the result with
+`splitCityResponse` from `src/data/loader.ts`.
 
 ## Layout
 

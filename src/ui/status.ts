@@ -1,8 +1,7 @@
 import type { LoadingStep, State, Store } from './store';
 
 const STEPS: { key: LoadingStep; label: string }[] = [
-  { key: 'boundary', label: 'מורידים את גבול העיר' },
-  { key: 'streets', label: 'מורידים את הרחובות' },
+  { key: 'download', label: 'מורידים את גבול העיר והרחובות' },
   { key: 'compute', label: 'מחשבים אורכים וכיוונים' },
 ];
 

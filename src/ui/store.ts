@@ -1,7 +1,7 @@
 import type { City } from '../data/cities';
 import type { CityResult } from '../geo/pipeline';
 
-export type LoadingStep = 'boundary' | 'streets' | 'compute';
+export type LoadingStep = 'download' | 'compute';
 
 export type Status =
   | { kind: 'idle' }

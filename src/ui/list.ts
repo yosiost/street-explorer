@@ -15,6 +15,8 @@ export function orientationIcon(street: Pick<Street, 'orientation' | 'bearingDeg
   const path = document.createElementNS(SVG_NS, 'path');
   if (street.orientation === 'WINDING') {
     path.setAttribute('d', 'M-8 4 C-5 -6, -1 -6, 0 0 S 5 6, 8 -4');
+  } else if (street.orientation === 'BRANCHED') {
+    path.setAttribute('d', 'M0 8 L0 0 M0 0 L-7 -7 M0 0 L7 -7');
   } else {
     // Compass bearing is clockwise from north, same as CSS/SVG rotate from "up".
     path.setAttribute('d', 'M0 -8 L0 8');

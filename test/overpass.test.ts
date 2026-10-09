@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { matchesCity, parseCityList } from '../src/data/cities';
-import { OverpassError, runQuery, streetsQuery } from '../src/data/overpass';
+import { cityQuery, OverpassError, runQuery } from '../src/data/overpass';
+import { splitCityResponse } from '../src/data/loader';
 
 const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
 const status = (code: number) => new Response('busy', { status: code });
@@ -89,13 +90,36 @@ describe('runQuery', () => {
 });
 
 describe('queries', () => {
-  it('streets query uses the configured highway list and excludes service roads', () => {
-    const q = streetsQuery(1383631);
+  it('city query fetches the boundary and the streets in one request', () => {
+    const q = cityQuery(1383631);
+    expect(q).toContain('.r out geom;');
+    expect(q).toContain('map_to_area');
+  });
+
+  it('city query uses the configured highway list and excludes service roads', () => {
+    const q = cityQuery(1383631);
     expect(q).toContain('rel(1383631)');
     expect(q).toContain('residential');
     expect(q).toContain('pedestrian');
     expect(q).not.toContain('service');
     expect(q).not.toContain('_link');
+  });
+});
+
+describe('splitCityResponse', () => {
+  it('separates the boundary relation from the street ways', () => {
+    const res = {
+      osm3s: { timestamp_osm_base: 't' },
+      elements: [
+        { type: 'relation' as const, id: 1, members: [] },
+        { type: 'way' as const, id: 2 },
+        { type: 'way' as const, id: 3 },
+      ],
+    };
+    const { boundary, streets } = splitCityResponse(res);
+    expect(boundary.elements.map((e) => e.id)).toEqual([1]);
+    expect(streets.elements.map((e) => e.id)).toEqual([2, 3]);
+    expect(streets.osm3s?.timestamp_osm_base).toBe('t');
   });
 });
 

@@ -54,7 +54,6 @@ export async function cached<T>(key: string, load: () => Promise<T>): Promise<T>
 
 export const cacheKeys = {
   cityList: 'raw:cities',
-  boundary: (id: number) => `raw:boundary:${id}`,
-  streets: (id: number) => `raw:streets:${id}`,
+  city: (id: number) => `raw:city:${id}`,
   processed: (id: number, version: number) => `processed:${id}:v${version}`,
 };

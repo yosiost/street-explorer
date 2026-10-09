@@ -14,15 +14,16 @@ rel(area.il)[boundary=administrative][admin_level=8][name];
 out tags;`;
 }
 
-export function boundaryQuery(relationId: number): string {
-  return `[out:json][timeout:60];
-rel(${relationId});
-out geom;`;
-}
-
-export function streetsQuery(relationId: number): string {
+/**
+ * Boundary and streets of one city in a single request: the boundary relation with member
+ * geometry, then named roads inside it. One request instead of two halves the exposure to
+ * Overpass "too busy" errors.
+ */
+export function cityQuery(relationId: number): string {
   return `[out:json][timeout:120];
-rel(${relationId})->.r; .r map_to_area->.city;
+rel(${relationId})->.r;
+.r out geom;
+.r map_to_area->.city;
 way(area.city)[highway~"^(${HIGHWAY_TYPES.join('|')})$"][name];
 out tags geom;`;
 }

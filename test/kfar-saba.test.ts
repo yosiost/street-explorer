@@ -64,6 +64,15 @@ describe('Kfar Saba fixture', () => {
     expect(w.orientation).toBe('E-W');
   });
 
+  it('T-shaped streets are BRANCHED and U-shaped ones WINDING', () => {
+    for (const name of ['הר רותם', 'הר שוקף', 'הרעות']) {
+      expect(byName.get(name)?.orientation, name).toBe('BRANCHED');
+    }
+    for (const name of ['ויתקין', 'דוד זהבי', 'תרי עשר']) {
+      expect(byName.get(name)?.orientation, name).toBe('WINDING');
+    }
+  });
+
   it('roundabouts mapped without a junction tag are not streets', () => {
     for (const name of ['כיכר מועדון ליונס', 'כיכר מועדון שרון', 'כיכר קולומבוס', 'כיכר העיר']) {
       expect(byName.has(name), name).toBe(false);

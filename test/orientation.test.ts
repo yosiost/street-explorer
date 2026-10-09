@@ -39,6 +39,99 @@ describe('orientation', () => {
     expect(s.orientation).toBe('WINDING');
   });
 
+  describe('branched streets', () => {
+    const street = (...lines: [number, number][][]) =>
+      build(lines.map((xy) => way('רחוב', xy)))[0]!;
+
+    it('a T shape is BRANCHED', () => {
+      const s = street(
+        [
+          [0, 0],
+          [300, 0],
+        ],
+        [
+          [150, 0],
+          [150, 250],
+        ],
+      );
+      expect(s.orientation).toBe('BRANCHED');
+    });
+
+    it('an H shape is BRANCHED', () => {
+      const s = street(
+        [
+          [0, 0],
+          [0, 300],
+        ],
+        [
+          [200, 0],
+          [200, 300],
+        ],
+        [
+          [0, 150],
+          [200, 150],
+        ],
+      );
+      expect(s.orientation).toBe('BRANCHED');
+    });
+
+    it('a U shape split into three ways is still WINDING', () => {
+      const s = street(
+        [
+          [0, 300],
+          [0, 0],
+        ],
+        [
+          [0, 0],
+          [200, 0],
+        ],
+        [
+          [200, 0],
+          [200, 300],
+        ],
+      );
+      expect(s.orientation).toBe('WINDING');
+    });
+
+    it('an L-shaped boulevard with two carriageways is WINDING, not BRANCHED', () => {
+      const [s] = build([
+        way(
+          'שדרה',
+          [
+            [0, 300],
+            [0, 0],
+            [300, 0],
+          ],
+          { oneway: 'yes' },
+        ),
+        way(
+          'שדרה',
+          [
+            [300, 20],
+            [20, 20],
+            [20, 300],
+          ],
+          { oneway: 'yes' },
+        ),
+      ]);
+      expect(s!.orientation).toBe('WINDING');
+    });
+
+    it('a straight street with a short side spur keeps its axis', () => {
+      const s = street(
+        [
+          [0, 0],
+          [600, 0],
+        ],
+        [
+          [300, 0],
+          [300, 40],
+        ],
+      );
+      expect(s.orientation).toBe('E-W');
+    });
+  });
+
   it('a gently curving street keeps its axis', () => {
     // 600 m east-west with a 30 m bow.
     const pts: [number, number][] = [];

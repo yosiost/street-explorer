@@ -12,7 +12,7 @@ Goals:
 - Show the city boundary and all named streets on an interactive map.
 - Show a list of streets with length and orientation, sortable longest-first or shortest-first.
 - Clicking a street in the list highlights it on the map and zooms to it; clicking a street on the map shows a popup with name, length and orientation.
-- Report orientation as one of: North–South, East–West, NE–SW, NW–SE, or Winding.
+- Report orientation as one of: North–South, East–West, NE–SW, NW–SE, Winding, or Branched.
 
 Non-goals for v1: routing, house numbers, offline-first mobile app, user accounts, any backend server, cities outside Israel.
 
@@ -23,7 +23,7 @@ UI language: Hebrew, right-to-left. Street names shown from `name:he`, falling b
 The app has two states: a city picker, and a city view with the map on one side and the street list on the other (stacked on mobile, map on top).
 
 1. **City picker.** A searchable dropdown (type-ahead in Hebrew) of Israeli municipalities, plus a "Map it" button. Default selection: Kfar Saba.
-2. **Loading.** Clicking "Map it" shows a progress panel with named steps: fetching boundary, fetching streets, computing lengths. Show a Cancel button. Expect 5–30 seconds depending on city size and Overpass load.
+2. **Loading.** Clicking "Map it" shows a progress panel with named steps: fetching boundary and streets, computing lengths. Show a Cancel button. Expect 5–30 seconds depending on city size and Overpass load.
 3. **City view — map.** Leaflet map fitted to the city boundary. Boundary drawn as a thin outline. All counted streets drawn in a neutral color, 3px.
 4. **City view — list.** Header shows city name, street count and total street length in km. A sort toggle (longest first / shortest first) and a text filter by name. Each row: rank, street name, length, orientation arrow + label.
 5. **List → map.** Clicking a row highlights that street (bright color, 6px, brought to front), fits the map to it, and opens its popup. Clicking another row moves the highlight. Esc or clicking empty map clears it.
@@ -43,7 +43,7 @@ The app is fully client-side: a static site, no backend. The browser calls the p
 | Build         | Vite + TypeScript, vanilla (no framework)                                                 | Small app; Claude Code handles it well; fast dev server                                                                         |
 | Map           | Leaflet 1.9                                                                               | Simple polyline highlight and popups; mature                                                                                    |
 | Tiles         | OSM standard tiles, with attribution                                                      | Free; Hebrew labels in Israel. Must be served over http(s), not `file://`, because the OSM tile policy requires a valid Referer |
-| Data          | Overpass API (`overpass-api.de`, fallback `overpass.kumi.systems`)                        | Only free source of street geometry with names                                                                                  |
+| Data          | Overpass API (`overpass-api.de`, fallbacks `maps.mail.ru`, `overpass.kumi.systems`)       | Only free source of street geometry with names                                                                                  |
 | Geometry      | Turf.js (`length`, `booleanPointInPolygon`, `lineSplit`, `bearing`, `nearestPointOnLine`) | Geodesic lengths, boundary clipping                                                                                             |
 | OSM → GeoJSON | `osmtogeojson`                                                                            | Assembles the multipolygon boundary from relation members                                                                       |
 | Cache         | IndexedDB via `idb-keyval`                                                                | Avoid re-querying Overpass for the same city                                                                                    |
@@ -62,7 +62,7 @@ Module layout:
 
 ## Data acquisition
 
-Three Overpass queries. The city list is fetched once and cached; boundary and streets are fetched per city and cached by relation id.
+Two Overpass queries. The city list is fetched once and cached; boundary and streets are fetched per city in one request and cached by relation id. If the city list can't be fetched, the app falls back to a snapshot bundled at build time.
 
 **1. City list.** All municipal boundaries in Israel. In Israeli OSM data, cities, local councils and regional councils are `admin_level=8`. The first run should log the count and a sample so we can confirm this. Regional councils are spread-out rural areas and make poor "cities", so hide them by default with a toggle (they usually carry "מועצה אזורית" in the name).
 
@@ -75,13 +75,13 @@ out tags;
 
 Keep `id`, `name:he` (fallback `name`), `name:en`. Sort by Hebrew name with `Intl.Collator('he')`.
 
-**2. Boundary.** `rel(<id>); out geom;` then convert with `osmtogeojson` into a (Multi)Polygon.
-
-**3. Streets.** Named roads inside the city area. Include `geom` so no separate node fetch is needed.
+**2. Boundary and streets.** One request returns the boundary relation with member geometry, then the named roads inside the city area. Include `geom` so no separate node fetch is needed. A single request instead of two halves the exposure to Overpass "too busy" errors. The boundary's outer and inner rings are stitched from the member ways into a (Multi)Polygon in our own code (`osmtogeojson` pulls in an XML library with critical security advisories).
 
 ```
 [out:json][timeout:120];
-rel(<id>)->.r; .r map_to_area->.city;
+rel(<id>)->.r;
+.r out geom;
+.r map_to_area->.city;
 way(area.city)[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|pedestrian)$"][name];
 out tags geom;
 ```
@@ -90,8 +90,9 @@ The highway list is a single config constant. Excluded on purpose: `service` (pa
 
 Network rules:
 
-- Timeout per request: 120 s. On HTTP 429 or 504, wait 5 s and retry once, then try the fallback endpoint.
-- Show a clear Hebrew error with a Retry button if both endpoints fail.
+- Timeout per request: 120 s. On HTTP 429 or 504, wait 5 s and retry once, then try the next endpoint. After all endpoints fail, go around the list once more.
+- Show a clear Hebrew error with a Retry button if every endpoint fails.
+- Endpoints must send CORS headers to work from a browser. As of 2026-10-09, `overpass.private.coffee` fails CORS in Chromium and `overpass.kumi.systems` returns HTTP 500.
 - Never hammer Overpass. One request at a time, and use the cache first.
 - Store raw responses in the cache, not processed output, so algorithm changes don't require refetching. Bump a `PIPELINE_VERSION` constant to invalidate processed results only.
 
@@ -105,7 +106,7 @@ interface Street {
   name: string; // display name (Hebrew)
   lengthM: number; // deduplicated length in meters
   rawLengthM: number; // plain sum, for debugging
-  orientation: 'N-S' | 'E-W' | 'NE-SW' | 'NW-SE' | 'WINDING';
+  orientation: 'N-S' | 'E-W' | 'NE-SW' | 'NW-SE' | 'WINDING' | 'BRANCHED';
   bearingDeg: number; // principal axis, 0–180
   segments: Feature<LineString>[]; // clipped geometry for drawing
   wayIds: number[];
@@ -116,8 +117,8 @@ interface Street {
 Pipeline, per city:
 
 1. **Normalize names.** Use `name:he`, else `name`. Trim, collapse whitespace, and unify geresh/gershayim variants (`'` `’` `׳` → `׳`, `"` `”` `״` → `״`). Do not strip prefixes like "שדרות": שדרות ויצמן and ויצמן can be different streets.
-2. **Drop roundabouts** (`junction=roundabout|circular`) from length, since a named roundabout would add its circumference. Keep them out of the drawing too.
-3. **Clip to the boundary.** Overpass `way(area)` returns any way with at least one node inside, so ways crossing the border stick out. Split each way at the boundary outline (`turf.lineSplit`) and keep the pieces whose midpoint is inside the polygon. Mark the street `clipped`. Result: length counts only the part inside the city.
+2. **Drop roundabouts** (`junction=roundabout|circular`) from length, since a named roundabout would add its circumference. Also treat a closed way whose name starts with "כיכר" as a roundabout: Kfar Saba has several without the junction tag. Drop pedestrian areas (`area=yes`), whose outline is not a street. Keep all of these out of the drawing too.
+3. **Clip to the boundary.** Overpass `way(area)` returns any way with at least one node inside, so ways crossing the border stick out. Split each way at the boundary outline (own code, with an `rbush` index of boundary edges, rather than `turf.lineSplit`) and keep the pieces whose midpoint is inside the polygon. Mark the street `clipped`. Result: length counts only the part inside the city. A clipped street with less than 100 m inside the city, and less than half of its ways' length inside, is a neighboring city's street poking over the border; drop it.
 4. **Group by normalized name.**
 5. **Split far-apart components.** Within a group, build connected components (two ways connect if endpoints are within 15 m). If two components are more than 1,000 m apart, they are treated as separate streets and shown as "הרצל (1)" and "הרצל (2)", flagged `split-components`. Otherwise keep one street even if there are small gaps.
 6. **Deduplicate dual carriageways.** Applies to ways tagged `oneway=yes` (or `-1`). Sample each such way every 10 m. A sample is _paired_ if another oneway way of the same street lies within 35 m of it and its local bearing differs by more than 135° (i.e. runs the opposite way). Then: `lengthM = unpairedLength + pairedLength / 2`. This handles boulevards that are dual for only part of their length. Flag `dual-carriageway` when the paired share is over 20%.
@@ -128,12 +129,13 @@ Performance target: Kfar Saba (roughly 600–900 named ways) processed in under 
 
 ## Orientation algorithm
 
-Orientation is an axis, not a direction: a street runs North–South, not "from North to South". So the result is an angle in 0–180° mapped to four buckets, plus "Winding" when no single axis fits.
+Orientation is an axis, not a direction: a street runs North–South, not "from North to South". So the result is an angle in 0–180° mapped to four buckets, plus "Winding" or "Branched" when no single axis fits.
 
 1. Project all sampled points of the street (every 10 m, after dedup) to local meters with an equirectangular projection centered on the street's centroid.
 2. Run PCA on those points (2×2 covariance, closed-form eigenvectors). The first eigenvector is the principal axis; convert it to a compass bearing in 0–180°.
-3. Linearity check: if the eigenvalue ratio λ2/λ1 > 0.2, or the street is a single component whose endpoint-to-endpoint distance is under 60% of its length, classify as `WINDING`.
-4. Otherwise bucket the bearing:
+3. Linearity check: if the eigenvalue ratio λ2/λ1 > 0.2, or the spread of the points along the principal axis is under 60% of the street's length, there is no single axis.
+4. Branching check (only when the linearity check failed): count the street's loose ends, meaning ends that no other piece of the same street meets. Loose oneway ends within 35 m of each other count as one, so a boulevard's two carriageway ends count once. If any connected part has three or more loose ends (T, Y, H shapes), classify as `BRANCHED`, else `WINDING`. A straight street with a short side spur passes the linearity check and keeps its bearing.
+5. Otherwise bucket the bearing:
 
 | Bearing (°)              | Code    | Hebrew label          |
 | ------------------------ | ------- | --------------------- |
@@ -142,8 +144,9 @@ Orientation is an axis, not a direction: a street runs North–South, not "from 
 | 67.5–112.5               | E-W     | מזרח–מערב             |
 | 112.5–157.5              | NW-SE   | צפון-מערב – דרום-מזרח |
 | (linearity check failed) | WINDING | מתפתל                 |
+| (failed, 3+ loose ends)  | BRANCHED | מסתעף                |
 
-Show a small rotated line icon next to the label in the list, drawn from `bearingDeg`, so the orientation is readable at a glance even for a child who can't read the label yet. Streets shorter than 50 m show orientation but no WINDING check (too few points to judge).
+Show a small rotated line icon next to the label in the list, drawn from `bearingDeg` (a squiggle for Winding, a fork for Branched), so the orientation is readable at a glance even for a child who can't read the label yet. Streets shorter than 50 m show orientation but no WINDING check (too few points to judge).
 
 Thresholds (0.2, 60%, 50 m) are config constants; expect to tune them once against Kfar Saba.
 
@@ -157,7 +160,7 @@ The numbers are only as good as OSM tagging, and some will be off by tens of met
 | Road crosses city border (e.g. toward Ra'anana, Hod HaSharon) | Length includes the neighboring city    | Clip to boundary (step 3)                                      |
 | Same name, two distant places                                 | Two streets merged into one long one    | Component split over 1,000 m (step 5)                          |
 | Name typo or variant between segments                         | One street split into two shorter ones  | Normalization (step 1); otherwise visible in debug, fix in OSM |
-| Named roundabout                                              | Circumference added                     | Excluded (step 2)                                              |
+| Named roundabout                                              | Circumference added                     | Excluded (step 2), including closed ways named "כיכר"           |
 | Highway named only by number (e.g. road 4 with no `name`)     | Missing from list                       | Acceptable for v1; such roads usually have `ref` only          |
 | Very short fragments                                          | Bogus "shortest street"                 | `tiny` flag, still listed                                      |
 | Unnamed alleys and parking lanes                              | Noise                                   | Excluded by the highway filter and `[name]`                    |
@@ -183,14 +186,14 @@ Synthetic unit tests (geometry built in code):
 - [ ] A line half inside, half outside a square boundary → length ≈ the inside half, flag `clipped`.
 - [ ] Two same-name lines 3 km apart → two streets with suffixes (1) and (2).
 - [ ] Name variants `רמב"ם` and `רמב״ם` → one street.
-- [ ] Straight line at bearing 10° → N-S; 80° → E-W; 45° → NE-SW; 135° → NW-SE; a U shape → WINDING.
+- [ ] Straight line at bearing 10° → N-S; 80° → E-W; 45° → NE-SW; 135° → NW-SE; a U shape → WINDING; a T or H shape → BRANCHED.
 - [ ] A roundabout way with the street's name adds 0 m.
 
 Acceptance on real data (Kfar Saba):
 
 - [ ] Selecting Kfar Saba loads in under 30 s cold and under 2 s from cache.
 - [ ] Every street in the list is drawn on the map, and every drawn street is in the list.
-- [ ] No street flagged `dual-carriageway` has `lengthM` above 60% of its `rawLengthM`.
+- [ ] Every street that is fully dual (paired share over 90%) has `lengthM` at most 60% of its `rawLengthM`. (Partly dual streets are flagged from 20% paired, so their length can legitimately be up to 90% of raw.)
 - [ ] The top 10 longest and the 10 shortest streets are reviewed by hand in the debug panel against the map, and each looks plausible; anything off is either an algorithm fix or a noted OSM issue.
 - [ ] Sort toggle, filter, list→map and map→list selection all work on desktop and on a phone.
 - [ ] Picking a second city (e.g. Ra'anana) works without a reload.

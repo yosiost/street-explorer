@@ -299,6 +299,44 @@ export function buildStreets(ways: OsmWay[], opts: BuildStreetsOptions): Street[
   return streets;
 }
 
+/**
+ * A street branches when one connected part has three or more loose ends. An end is loose
+ * when no other piece of the street meets it. Loose oneway ends within PAIR_MAX_DIST_M of
+ * each other count as one, so a boulevard whose two carriageways end side by side has one
+ * end there, not two.
+ */
+export function isBranched(pieces: Piece[]): boolean {
+  const loose: { p: XY; piece: number }[] = [];
+  pieces.forEach((pc, i) => {
+    for (const p of [pc.xy[0]!, pc.xy[pc.xy.length - 1]!]) {
+      const meets = pieces.some((other, j) => j !== i && nearLine(p, other.xy));
+      if (!meets) loose.push({ p, piece: i });
+    }
+  });
+
+  const parent = loose.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i]!)));
+  for (let i = 0; i < loose.length; i++) {
+    for (let j = i + 1; j < loose.length; j++) {
+      const a = loose[i]!;
+      const b = loose[j]!;
+      const bothOneway = pieces[a.piece]!.oneway !== 0 && pieces[b.piece]!.oneway !== 0;
+      if (bothOneway && dist(a.p, b.p) <= PAIR_MAX_DIST_M) parent[find(i)] = find(j);
+    }
+  }
+
+  const componentOf = new Map<number, number>();
+  connectedComponents(pieces).forEach((c, k) => c.forEach((i) => componentOf.set(i, k)));
+  const endsPerComponent = new Map<number, Set<number>>();
+  loose.forEach((e, i) => {
+    const k = componentOf.get(e.piece)!;
+    const set = endsPerComponent.get(k) ?? new Set<number>();
+    set.add(find(i));
+    endsPerComponent.set(k, set);
+  });
+  return [...endsPerComponent.values()].some((ends) => ends.size >= 3);
+}
+
 function isBorderSliver(pieces: Piece[], insideM: number): boolean {
   if (insideM >= BORDER_SLIVER_M || !pieces.some((p) => p.clipped)) return false;
   const wayLen = new Map<number, number>();
@@ -328,7 +366,11 @@ function measureStreet(
   });
   const lengthM = raw - paired / 2;
   const pairedShare = raw > 0 ? paired / raw : 0;
-  const { orientation, bearingDeg } = classifyOrientation(points, lengthM);
+  const fit = classifyOrientation(points, lengthM);
+  // No single axis: tell branching streets (T, Y, H shapes) apart from winding ones.
+  const orientation: Orientation =
+    fit.orientation === 'WINDING' && isBranched(pieces) ? 'BRANCHED' : fit.orientation;
+  const { bearingDeg } = fit;
 
   const flags: Street['flags'] = [];
   if (pairedShare > DUAL_FLAG_SHARE) flags.push('dual-carriageway');
