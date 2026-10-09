@@ -44,7 +44,9 @@ export function mountStatus(
       const secs = Math.round((Date.now() - st.startedAt) / 1000);
       note.textContent = st.retrying
         ? `השרת עמוס, מנסים שוב… (${secs} שניות)`
-        : `${secs} שניות. בעיר גדולה זה יכול לקחת עד חצי דקה.`;
+        : st.large
+          ? `${secs} שניות. זו עיר גדולה מאוד, זה יכול לקחת כמה דקות.`
+          : `${secs} שניות. בעיר גדולה זה יכול לקחת עד חצי דקה.`;
     };
     tick();
     timer = window.setInterval(tick, 1000);

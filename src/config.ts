@@ -43,9 +43,25 @@ export const HIGHWAY_TYPES = [
   'pedestrian',
 ];
 
+// World search: Nominatim, OSM's own geocoder. Its usage policy allows at most one request
+// per second and forbids search-as-you-type, so the app only searches when asked.
+export const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search';
+export const NOMINATIM_MIN_INTERVAL_MS = 1_100;
+export const WORLD_SEARCH_LIMIT = 10;
+export const RECENT_CITIES_MAX = 8;
+
+// City size, from the search result's bounding box (not the real area, so generous).
+// Above LARGE the download is slow and gets a longer Overpass timeout; above MAX it would
+// be tens of thousands of streets, so we ask for a district instead.
+// Bounding boxes: Kfar Saba 31 km², Paris 173, Manhattan 265, Berlin 1,702, New York 2,301,
+// London 2,624.
+export const CITY_LARGE_KM2 = 400;
+export const CITY_MAX_KM2 = 2_000;
+export const OVERPASS_LARGE_TIMEOUT_MS = 300_000;
+
 export const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Bump when the geo pipeline changes; invalidates cached processed results only.
-export const PIPELINE_VERSION = 3;
+export const PIPELINE_VERSION = 4;
 
 // --- Street model ---
 

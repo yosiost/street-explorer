@@ -14,7 +14,11 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const fixture = JSON.parse(
   readFileSync(new URL('../test/fixtures/kfar-saba.json', import.meta.url)),
 );
+const hoboken = JSON.parse(readFileSync(new URL('../test/fixtures/hoboken.json', import.meta.url)));
 const cities = readFileSync(new URL('../test/fixtures/cities.json', import.meta.url), 'utf8');
+const nominatim = JSON.parse(
+  readFileSync(new URL('../test/fixtures/nominatim.json', import.meta.url)),
+);
 
 let failures = 0;
 const check = (cond, msg) => {
@@ -28,13 +32,20 @@ async function routeOverpass(page, mode = 'ok') {
     const q = decodeURIComponent(route.request().postData() ?? '');
     if (mode === 'fail') return route.fulfill({ status: 500, body: 'down' });
     if (mode === 'slow') await new Promise((r) => setTimeout(r, 4000));
+    const city = q.includes(`rel(${hoboken.relationId})`) ? hoboken : fixture;
     const body = q.includes('ISO3166')
       ? cities
       : JSON.stringify({
-          ...fixture.streets,
-          elements: [...fixture.boundary.elements, ...fixture.streets.elements],
+          ...city.streets,
+          elements: [...city.boundary.elements, ...city.streets.elements],
         });
     await route.fulfill({ status: 200, contentType: 'application/json', body }).catch(() => {});
+  });
+  // World search: canned Nominatim answers keyed by query.
+  await page.route(/nominatim\.openstreetmap\.org\/search/, (route) => {
+    const q = new URL(route.request().url()).searchParams.get('q').toLowerCase();
+    const body = JSON.stringify(nominatim[q] ?? []);
+    return route.fulfill({ status: 200, contentType: 'application/json', body });
   });
 }
 
@@ -212,6 +223,20 @@ const errors = [];
     );
   } else check(false, 'found an empty spot on the map');
 
+  // Typing the picked city's full name filters by it (it used to show the whole list,
+  // so Enter picked the first city in the alphabet).
+  await page.click('#city-input');
+  await page.fill('#city-input', 'כפר סבא');
+  await page.keyboard.press('Enter');
+  check(
+    (await page.inputValue('#city-input')) === 'כפר סבא',
+    'typing the exact picked name keeps it',
+  );
+  check(
+    (await page.evaluate(() => window.__app.store.get().pickedCity.name)) === 'כפר סבא',
+    'and Enter picks that city, not the first in the list',
+  );
+
   // Second city without reload (same fixture data, different id flows through the cache keys).
   await page.click('#city-input');
   await page.fill('#city-input', 'רעננה');
@@ -232,6 +257,57 @@ const errors = [];
   await page.click('#map-it');
   await page.waitForFunction(() => document.querySelector('#city-name').textContent === 'כפר סבא');
   check(Date.now() - t1 < 2000, `cached Kfar Saba loads in ${Date.now() - t1} ms`);
+
+  // World search: no local match, so Enter runs the search, then picks the first result.
+  const optionTexts = () => page.$$eval('#city-listbox li', (els) => els.map((e) => e.textContent));
+  await page.click('#city-input');
+  await page.fill('#city-input', 'hoboken');
+  const before = await optionTexts();
+  check(
+    before.length === 1 && before[0].includes('בכל העולם'),
+    `no local match offers a world search: ${before.join(' / ')}`,
+  );
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#city-listbox li[role=option] .context');
+  const found = await optionTexts();
+  check(
+    found.some((t) => t.startsWith('הובוקן') && t.includes('ארצות הברית')),
+    `world results in Hebrew with country: ${found.join(' / ')}`,
+  );
+  await shot(page, '09-world-search');
+  await page.keyboard.press('Enter');
+  check((await page.inputValue('#city-input')) === 'הובוקן', 'Enter picks the first world result');
+  await page.click('#map-it');
+  await page.waitForFunction(() => document.querySelector('#city-name').textContent === 'הובוקן');
+  const hobokenNames = await rowNames(page);
+  check(
+    hobokenNames.includes('Washington Street') && !hobokenNames.some((n) => n.includes('׳')),
+    `a world city loads with local street names (${hobokenNames.length} streets)`,
+  );
+  check(
+    (await page.$eval('#street-list', (el) => el.scrollTop)) === 0,
+    'a new city starts at the top of the list',
+  );
+  await page.waitForTimeout(1200);
+  await shot(page, '10-world-city');
+
+  // Recent cities: Hoboken now matches without a search.
+  await page.click('#city-input');
+  await page.fill('#city-input', 'הובו');
+  const recent = await optionTexts();
+  check(recent[0]?.startsWith('הובוקן'), `opened world city is remembered: ${recent[0]}`);
+  await page.keyboard.press('Escape');
+
+  // Too big: shown, explained, not selectable.
+  await page.fill('#city-input', 'tokyo');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#city-listbox li[aria-disabled=true]');
+  const tokyo = await page.textContent('#city-listbox li[aria-disabled=true]');
+  check(tokyo.includes('טוקיו') && tokyo.includes('גדולה מדי'), `too-big city explained: ${tokyo}`);
+  await page.click('#city-listbox li[aria-disabled=true]', { force: true });
+  await page.keyboard.press('Escape');
+  await page.click('.list-pane');
+  check((await page.inputValue('#city-input')) === 'הובוקן', 'a too-big city cannot be picked');
   await ctx.close();
 }
 

@@ -134,6 +134,47 @@ button {
   cursor: default;
 }
 
+#city-listbox li.heading {
+  margin-top: 4px;
+  padding: 6px 10px 2px;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: default;
+}
+
+#city-listbox li.heading:hover,
+#city-listbox li.empty:hover {
+  background: none;
+}
+
+#city-listbox li.search {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+#city-listbox li .context,
+#city-listbox li .size-note {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+#city-listbox li .size-note.large {
+  color: var(--accent);
+}
+
+#city-listbox li[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+#city-listbox li[aria-disabled='true']:hover {
+  background: none;
+}
+
 #map-it,
 #retry-load {
   height: 40px;

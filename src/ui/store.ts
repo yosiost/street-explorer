@@ -5,12 +5,22 @@ export type LoadingStep = 'download' | 'compute';
 
 export type Status =
   | { kind: 'idle' }
-  | { kind: 'loading'; step: LoadingStep; startedAt: number; retrying?: string }
+  | {
+      kind: 'loading';
+      step: LoadingStep;
+      startedAt: number;
+      retrying?: string;
+      /** A city big enough to take minutes. */
+      large?: boolean;
+    }
   | { kind: 'error'; message: string }
   | { kind: 'ready' };
 
 export interface State {
+  /** Israeli cities (bundled list or Overpass). */
   cities: City[];
+  /** World cities opened before, newest first. */
+  recentCities: City[];
   /** City the picker currently points at. */
   pickedCity: City | null;
   /** City whose result is shown. */

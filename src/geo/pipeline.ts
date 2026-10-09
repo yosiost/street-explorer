@@ -2,6 +2,7 @@ import type { Feature, MultiPolygon, Polygon } from 'geojson';
 import type { OsmWay, OverpassResponse } from '../data/osm';
 import { assembleBoundary, BoundaryIndex, boundaryRings } from './boundary';
 import { makeProjection } from './geometry';
+import { HEBREW_NAME_KEYS, LOCAL_NAME_KEYS } from './names';
 import { buildStreets, type Street } from './streets';
 
 export type PipelineStep = 'boundary' | 'clip' | 'group' | 'measure';
@@ -15,6 +16,7 @@ export interface CityResult {
 export function processCity(
   raw: { boundary: OverpassResponse; streets: OverpassResponse },
   onProgress?: (step: PipelineStep, fraction: number) => void,
+  opts: { hebrewNames?: boolean } = {},
 ): CityResult {
   const t0 = performance.now();
   onProgress?.('boundary', 0);
@@ -40,7 +42,12 @@ export function processCity(
   );
 
   const ways = raw.streets.elements.filter((e): e is OsmWay => e.type === 'way');
-  const streets = buildStreets(ways, { projection, boundary: index, onProgress });
+  const streets = buildStreets(ways, {
+    projection,
+    boundary: index,
+    nameKeys: opts.hebrewNames === false ? LOCAL_NAME_KEYS : HEBREW_NAME_KEYS,
+    onProgress,
+  });
   return {
     boundary,
     streets,

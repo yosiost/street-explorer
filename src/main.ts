@@ -1,9 +1,10 @@
 import './style.css';
-import { DEFAULT_CITY_ID, PIPELINE_VERSION } from './config';
+import { DEFAULT_CITY_ID, OVERPASS_LARGE_TIMEOUT_MS, PIPELINE_VERSION } from './config';
 import { cacheGet, cacheKeys, cacheSet } from './data/cache';
-import type { City } from './data/cities';
+import { citySize, isIsraeli, type City } from './data/cities';
 import { loadCityList, loadCityRaw, type CityRaw } from './data/loader';
 import { OverpassError } from './data/overpass';
+import { loadRecent, rememberRecent } from './data/recent';
 import type { CityResult } from './geo/pipeline';
 import { mountDebug } from './ui/debug';
 import { mountList } from './ui/list';
@@ -21,6 +22,7 @@ const $ = <T extends HTMLElement>(sel: string) => {
 
 const store = createStore({
   cities: [],
+  recentCities: loadRecent(),
   pickedCity: null,
   shownCity: null,
   result: null,
@@ -58,6 +60,8 @@ mountList($('.list-pane'), store, (id) => {
 
 // --- Loading a city ---
 
+const TOO_BIG_MESSAGE = 'העיר הזו גדולה מדי בשביל האפליקציה. חפשו רובע או שכונה שלה.';
+
 interface Job {
   abort: AbortController;
   worker?: Worker;
@@ -79,7 +83,7 @@ function cancel() {
   store.set({ status: settledStatus(store.get()) });
 }
 
-function runWorker(raw: CityRaw, j: Job): Promise<CityResult> {
+function runWorker(raw: CityRaw, hebrewNames: boolean, j: Job): Promise<CityResult> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
     j.worker = worker;
@@ -94,7 +98,7 @@ function runWorker(raw: CityRaw, j: Job): Promise<CityResult> {
       reject(new Error(e.message || 'worker failed'));
       worker.terminate();
     };
-    worker.postMessage({ type: 'process', raw } satisfies WorkerRequest);
+    worker.postMessage({ type: 'process', raw, hebrewNames } satisfies WorkerRequest);
   });
 }
 
@@ -104,8 +108,16 @@ async function loadCity(city: City) {
   const j: Job = { abort: new AbortController() };
   job = j;
   const startedAt = Date.now();
+  const size = citySize(city);
+  if (size === 'too-big') {
+    // The picker does not offer these; this guards other ways in.
+    job = null;
+    store.set({ status: { kind: 'error', message: TOO_BIG_MESSAGE } });
+    return;
+  }
+  const large = size === 'large';
   const setStep = (step: LoadingStep, retrying?: string) => {
-    if (job === j) store.set({ status: { kind: 'loading', step, startedAt, retrying } });
+    if (job === j) store.set({ status: { kind: 'loading', step, startedAt, retrying, large } });
   };
   setStep('download');
 
@@ -116,13 +128,14 @@ async function loadCity(city: City) {
     if (!result) {
       const raw = await loadCityRaw(city.id, {
         signal: j.abort.signal,
+        timeoutMs: large ? OVERPASS_LARGE_TIMEOUT_MS : undefined,
         onRetry: ({ endpoint, reason }) => {
           console.info(`[overpass] ${new URL(endpoint).host}: ${reason}; trying again`);
           setStep('download', reason);
         },
       });
       setStep('compute');
-      result = await runWorker(raw, j);
+      result = await runWorker(raw, isIsraeli(city), j);
       source = raw.fromCache ? 'raw-cache' : 'network';
       void cacheSet(processedKey, result);
     }
@@ -130,6 +143,10 @@ async function loadCity(city: City) {
     job = null;
     mapView.showCity(result);
     store.set({
+      // Only search results are remembered; the Israeli list is always there.
+      recentCities: city.context
+        ? rememberRecent(city, store.get().recentCities)
+        : store.get().recentCities,
       result,
       shownCity: city,
       resultSource: source,
@@ -150,7 +167,9 @@ async function loadCity(city: City) {
       status: {
         kind: 'error',
         message: network
-          ? 'לא הצלחנו להוריד את הנתונים מ־OpenStreetMap. ייתכן שהשרתים עמוסים כרגע. נסו שוב בעוד דקה.'
+          ? large
+            ? 'לא הצלחנו להוריד את העיר. היא גדולה מאוד, ואולי השרתים עמוסים. נסו שוב, או חפשו רובע או שכונה שלה.'
+            : 'לא הצלחנו להוריד את הנתונים מ־OpenStreetMap. ייתכן שהשרתים עמוסים כרגע. נסו שוב בעוד דקה.'
           : 'משהו השתבש בעיבוד הנתונים של העיר הזו.',
       },
     });

@@ -1,0 +1,487 @@
+{
+ "paris-he": [
+  {
+   "place_id": 97683695,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 71525,
+   "lat": "48.8534951",
+   "lon": "2.3483915",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 12,
+   "importance": 0.897098092136026,
+   "addresstype": "city",
+   "name": "פריז",
+   "display_name": "פריז, איל-דה-פראנס, צרפת המטרופוליטנית, צרפת",
+   "address": {
+    "city": "פריז",
+    "ISO3166-2-lvl6": "FR-75C",
+    "state": "איל-דה-פראנס",
+    "ISO3166-2-lvl4": "FR-IDF",
+    "region": "צרפת המטרופוליטנית",
+    "country": "צרפת",
+    "country_code": "fr"
+   },
+   "boundingbox": [
+    "48.8155755",
+    "48.9021560",
+    "2.2241220",
+    "2.4697602"
+   ]
+  },
+  {
+   "place_id": 97644102,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 7444,
+   "lat": "48.8588897",
+   "lon": "2.3200410",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 15,
+   "importance": 0.897098092136026,
+   "addresstype": "suburb",
+   "name": "פריז",
+   "display_name": "פריז, איל-דה-פראנס, צרפת המטרופוליטנית, צרפת",
+   "address": {
+    "suburb": "פריז",
+    "city_district": "פריז",
+    "city": "פריז",
+    "ISO3166-2-lvl6": "FR-75C",
+    "state": "איל-דה-פראנס",
+    "ISO3166-2-lvl4": "FR-IDF",
+    "region": "צרפת המטרופוליטנית",
+    "country": "צרפת",
+    "country_code": "fr"
+   },
+   "boundingbox": [
+    "48.8155755",
+    "48.9021560",
+    "2.2241220",
+    "2.4697602"
+   ]
+  },
+  {
+   "place_id": 97919129,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 1641193,
+   "lat": "48.8588897",
+   "lon": "2.3200410",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 14,
+   "importance": 0.4594627538257798,
+   "addresstype": "city_district",
+   "name": "פריז",
+   "display_name": "פריז, איל-דה-פראנס, צרפת המטרופוליטנית, צרפת",
+   "address": {
+    "city_district": "פריז",
+    "city": "פריז",
+    "ISO3166-2-lvl6": "FR-75C",
+    "state": "איל-דה-פראנס",
+    "ISO3166-2-lvl4": "FR-IDF",
+    "region": "צרפת המטרופוליטנית",
+    "country": "צרפת",
+    "country_code": "fr"
+   },
+   "boundingbox": [
+    "48.8155755",
+    "48.9021560",
+    "2.2241220",
+    "2.4697602"
+   ]
+  }
+ ],
+ "manhattan": [
+  {
+   "place_id": 329676175,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 129869,
+   "lat": "39.1836082",
+   "lon": "-96.5716694",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.5668232095504399,
+   "addresstype": "city",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Riley County, קנזס, ארצות הברית",
+   "address": {
+    "city": "Manhattan",
+    "county": "Riley County",
+    "state": "קנזס",
+    "ISO3166-2-lvl4": "US-KS",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "39.1241341",
+    "39.2287959",
+    "-96.6902756",
+    "-96.4967126"
+   ]
+  },
+  {
+   "place_id": 370222431,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 125780,
+   "lat": "41.4225316",
+   "lon": "-87.9858863",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.46632170529810896,
+   "addresstype": "village",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Will County, אילינוי, 60442, ארצות הברית",
+   "address": {
+    "village": "Manhattan",
+    "county": "Will County",
+    "state": "אילינוי",
+    "ISO3166-2-lvl4": "US-IL",
+    "postcode": "60442",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "41.3878408",
+    "41.4544298",
+    "-88.0203360",
+    "-87.9410830"
+   ]
+  },
+  {
+   "place_id": 359822911,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 8398124,
+   "lat": "40.7579554",
+   "lon": "-73.9855319",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 14,
+   "importance": 0.7407549492815332,
+   "addresstype": "suburb",
+   "name": "מנהטן",
+   "display_name": "מנהטן, ניו יורק, ארצות הברית",
+   "address": {
+    "suburb": "מנהטן",
+    "city_district": "מנהטן",
+    "city": "ניו יורק",
+    "state": "ניו יורק",
+    "ISO3166-2-lvl4": "US-NY",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "40.6796540",
+    "40.8820120",
+    "-74.0472219",
+    "-73.9067690"
+   ]
+  },
+  {
+   "place_id": 360583437,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 3954665,
+   "lat": "40.7886553",
+   "lon": "-73.9602966",
+   "category": "place",
+   "type": "island",
+   "place_rank": 17,
+   "importance": 0.7407549492815332,
+   "addresstype": "island",
+   "name": "מנהטן",
+   "display_name": "מנהטן, ניו יורק, ארצות הברית",
+   "address": {
+    "island": "מנהטן",
+    "city": "ניו יורק",
+    "state": "ניו יורק",
+    "ISO3166-2-lvl4": "US-NY",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "40.6997802",
+    "40.8776305",
+    "-74.0193391",
+    "-73.9104387"
+   ]
+  },
+  {
+   "place_id": 330336273,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 142448,
+   "lat": "45.8553690",
+   "lon": "-111.3340810",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.3708703066864196,
+   "addresstype": "town",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Gallatin County, מונטנה, ארצות הברית",
+   "address": {
+    "town": "Manhattan",
+    "county": "Gallatin County",
+    "state": "מונטנה",
+    "ISO3166-2-lvl4": "US-MT",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "45.8507570",
+    "45.8668250",
+    "-111.3421860",
+    "-111.3185480"
+   ]
+  },
+  {
+   "place_id": 322226765,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "node",
+   "osm_id": 150973132,
+   "lat": "38.5386613",
+   "lon": "-117.0739503",
+   "category": "place",
+   "type": "hamlet",
+   "place_rank": 20,
+   "importance": 0.33196524373349834,
+   "addresstype": "hamlet",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Nye County, נבדה, 89022, ארצות הברית",
+   "address": {
+    "hamlet": "Manhattan",
+    "county": "Nye County",
+    "state": "נבדה",
+    "ISO3166-2-lvl4": "US-NV",
+    "postcode": "89022",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "38.5186613",
+    "38.5586613",
+    "-117.0939503",
+    "-117.0539503"
+   ]
+  },
+  {
+   "place_id": 337858196,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "node",
+   "osm_id": 153603710,
+   "lat": "39.5550444",
+   "lon": "-86.9275114",
+   "category": "place",
+   "type": "hamlet",
+   "place_rank": 20,
+   "importance": 0.30663527500158994,
+   "addresstype": "hamlet",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Putnam County, אינדיאנה, 46171, ארצות הברית",
+   "address": {
+    "hamlet": "Manhattan",
+    "county": "Putnam County",
+    "state": "אינדיאנה",
+    "ISO3166-2-lvl4": "US-IN",
+    "postcode": "46171",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "39.5350444",
+    "39.5750444",
+    "-86.9475114",
+    "-86.9075114"
+   ]
+  },
+  {
+   "place_id": 305684197,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "node",
+   "osm_id": 153887694,
+   "lat": "27.5075391",
+   "lon": "-82.3187032",
+   "category": "place",
+   "type": "hamlet",
+   "place_rank": 20,
+   "importance": 0.30093685344584264,
+   "addresstype": "hamlet",
+   "name": "Manhattan",
+   "display_name": "Manhattan, Manatee County, פלורידה, ארצות הברית",
+   "address": {
+    "hamlet": "Manhattan",
+    "county": "Manatee County",
+    "state": "פלורידה",
+    "ISO3166-2-lvl4": "US-FL",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "27.4875391",
+    "27.5275391",
+    "-82.3387032",
+    "-82.2987032"
+   ]
+  },
+  {
+   "place_id": 359943328,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 2552485,
+   "lat": "40.7814865",
+   "lon": "-73.9590532",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 12,
+   "importance": 0.38135438604633176,
+   "addresstype": "city_district",
+   "name": "מנהטן",
+   "display_name": "מנהטן, ניו יורק, ארצות הברית",
+   "address": {
+    "city_district": "מנהטן",
+    "city": "ניו יורק",
+    "state": "ניו יורק",
+    "ISO3166-2-lvl4": "US-NY",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "40.6796540",
+    "40.8820120",
+    "-74.0472219",
+    "-73.9067690"
+   ]
+  }
+ ],
+ "tokyo": [
+  {
+   "place_id": 258778524,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 1543125,
+   "lat": "35.6768601",
+   "lon": "139.7638947",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 8,
+   "importance": 0.8337626616070368,
+   "addresstype": "city",
+   "name": "טוקיו",
+   "display_name": "טוקיו, יפן",
+   "address": {
+    "city": "טוקיו",
+    "ISO3166-2-lvl4": "JP-13",
+    "country": "יפן",
+    "country_code": "jp"
+   },
+   "boundingbox": [
+    "20.2145811",
+    "35.8984245",
+    "135.8536855",
+    "154.2055410"
+   ]
+  }
+ ],
+ "hoboken": [
+  {
+   "place_id": 358550679,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 170708,
+   "lat": "40.7433066",
+   "lon": "-74.0323752",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.5764523534125419,
+   "addresstype": "town",
+   "name": "הובוקן",
+   "display_name": "הובוקן, Hudson County, ניו ג'רזי, 07030, ארצות הברית",
+   "address": {
+    "town": "הובוקן",
+    "county": "Hudson County",
+    "state": "ניו ג'רזי",
+    "ISO3166-2-lvl4": "US-NJ",
+    "postcode": "07030",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "40.7303906",
+    "40.7590990",
+    "-74.0439878",
+    "-74.0142459"
+   ]
+  },
+  {
+   "place_id": 106818980,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 59534,
+   "lat": "51.1794946",
+   "lon": "4.3617847",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.4548351038280619,
+   "addresstype": "town",
+   "name": "Hoboken",
+   "display_name": "Hoboken, אנטוורפן, Vlaanderen, 2660, בֶּלְגְיָה",
+   "address": {
+    "town": "Hoboken",
+    "city": "אנטוורפן",
+    "county": "אנטוורפן",
+    "state": "אנטוורפן",
+    "ISO3166-2-lvl6": "BE-VAN",
+    "ISO3166-2-lvl4": "BE-VLG",
+    "postcode": "2660",
+    "country": "בֶּלְגְיָה",
+    "country_code": "be"
+   },
+   "boundingbox": [
+    "51.1555641",
+    "51.1961739",
+    "4.3279872",
+    "4.3782883"
+   ]
+  },
+  {
+   "place_id": 302152488,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 119857,
+   "lat": "31.1810559",
+   "lon": "-82.1348416",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.4072594434730916,
+   "addresstype": "village",
+   "name": "Hoboken",
+   "display_name": "Hoboken, Brantley County, ג'ורג'יה, 31542, ארצות הברית",
+   "address": {
+    "village": "Hoboken",
+    "county": "Brantley County",
+    "state": "ג'ורג'יה",
+    "ISO3166-2-lvl4": "US-GA",
+    "postcode": "31542",
+    "country": "ארצות הברית",
+    "country_code": "us"
+   },
+   "boundingbox": [
+    "31.1678908",
+    "31.1940098",
+    "-82.1520930",
+    "-82.1157304"
+   ]
+  }
+ ]
+}

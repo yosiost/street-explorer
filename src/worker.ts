@@ -5,6 +5,8 @@ import { processCity, type CityResult, type PipelineStep } from './geo/pipeline'
 export type WorkerRequest = {
   type: 'process';
   raw: { boundary: OverpassResponse; streets: OverpassResponse };
+  /** Prefer name:he (Israeli cities); otherwise the local name. */
+  hebrewNames: boolean;
 };
 
 export type WorkerResponse =
@@ -17,8 +19,11 @@ const post = (msg: WorkerResponse) => self.postMessage(msg);
 self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   if (e.data.type !== 'process') return;
   try {
-    const result = processCity(e.data.raw, (step, fraction) =>
-      post({ type: 'progress', step, fraction }),
+    const { raw, hebrewNames } = e.data;
+    const result = processCity(
+      raw,
+      (step, fraction) => post({ type: 'progress', step, fraction }),
+      { hebrewNames },
     );
     post({ type: 'done', result });
   } catch (err) {

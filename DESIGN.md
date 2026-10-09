@@ -4,25 +4,25 @@ Oct 9, 2026 · @Yosi
 
 ## Overview and goals
 
-Build a single-page web app that lets a user pick an Israeli city, fetches its streets from OpenStreetMap, and shows them on a map plus a list sorted by length. The first audience is a curious 6-year-old in Kfar Saba and his dad, so the answers to "which street is longest / shortest" must be believable, and the UI must be simple enough to use together.
+Build a single-page web app that lets a user pick a city (from the Israeli list, or anywhere in the world through search), fetches its streets from OpenStreetMap, and shows them on a map plus a list sorted by length. The first audience is a curious 6-year-old in Kfar Saba and his dad, so the answers to "which street is longest / shortest" must be believable, and the UI must be simple enough to use together.
 
 Goals:
 
-- Pick a city from a list of Israeli municipalities, confirm, and see progress while data loads.
+- Pick a city from a list of Israeli municipalities, or search for any city in the world, confirm, and see progress while data loads.
 - Show the city boundary and all named streets on an interactive map.
 - Show a list of streets with length and orientation, sortable longest-first or shortest-first.
 - Clicking a street in the list highlights it on the map and zooms to it; clicking a street on the map shows a popup with name, length and orientation.
 - Report orientation as one of: North–South, East–West, NE–SW, NW–SE, Winding, or Branched.
 
-Non-goals for v1: routing, house numbers, offline-first mobile app, user accounts, any backend server, cities outside Israel.
+Non-goals for v1: routing, house numbers, offline-first mobile app, user accounts, any backend server, an English UI.
 
-UI language: Hebrew, right-to-left. Street names shown from `name:he`, falling back to `name`. Code, comments and identifiers in English.
+UI language: Hebrew, right-to-left. In Israeli cities street names come from `name:he`, falling back to `name`; elsewhere from the local `name` (see step 1). Code, comments and identifiers in English.
 
 ## User flow and UI
 
 The app has two states: a city picker, and a city view with the map on one side and the street list on the other (stacked on mobile, map on top).
 
-1. **City picker.** A searchable dropdown (type-ahead in Hebrew) of Israeli municipalities, plus a "Map it" button. Default selection: Kfar Saba.
+1. **City picker.** A searchable dropdown (type-ahead in Hebrew) of Israeli municipalities, plus a "Map it" button. Default selection: Kfar Saba. The last option, "חיפוש ״…״ בכל העולם", searches the whole world for the typed text (also what Enter does when nothing local matches). Results show the name in Hebrew when OSM has one, with region and country. World cities that were opened are remembered in the browser and match as you type next time.
 2. **Loading.** Clicking "Map it" shows a progress panel with named steps: fetching boundary and streets, computing lengths. Show a Cancel button. Expect 5–30 seconds depending on city size and Overpass load.
 3. **City view — map.** Leaflet map fitted to the city boundary. Boundary drawn as a thin outline. All counted streets drawn in a neutral color, 3px.
 4. **City view — list.** Header shows city name, street count and total street length in km. A sort toggle (longest first / shortest first) and a text filter by name. Each row: rank, street name, length, orientation arrow + label.
@@ -96,6 +96,13 @@ Network rules:
 - Never hammer Overpass. One request at a time, and use the cache first.
 - Store raw responses in the cache, not processed output, so algorithm changes don't require refetching. Bump a `PIPELINE_VERSION` constant to invalidate processed results only.
 
+**3. World search.** Any other city is found with [Nominatim](https://nominatim.org/), OSM's geocoder: `search?q=<text>&format=jsonv2&addressdetails=1&accept-language=he`. It returns Hebrew names where OSM has them ("פריז, איל-דה-פראנס, צרפת"). Photon was considered because it allows search-as-you-type, but it has no Hebrew. Rules:
+
+- Nominatim's usage policy forbids autocomplete and allows at most one request per second, so the app searches only on an explicit action, spaced at least 1.1 s apart.
+- Keep only relations (only they have a boundary to clip to), with category `boundary` or `place`. Merge results with the same name and bounding box: Paris comes back as a city, a commune and a département with one border.
+- The result's `id` is the relation id, so boundary, streets and cache keys work exactly as for Israeli cities.
+- **City size** is judged from the result's bounding box before downloading anything. Up to 400 km² is normal. Up to 2,000 km² is "large": a warning in the picker, a 300 s timeout and a "this can take minutes" note while loading. Above that the city is shown but can't be picked, with a hint to search for a district instead. For reference, bounding boxes: Kfar Saba 31 km², Paris 173, Manhattan 265 (about 9,000 street ways), Berlin 1,702, New York 2,301, London 2,624, and Tokyo with its islands over 3 million.
+
 ## Street model and length algorithm
 
 A "street" is not an OSM object. It is all counted ways in the city that share a normalized name, minus double-counted carriageways. This step decides whether "longest street" is right, so it gets the most care and the most tests.
@@ -116,7 +123,7 @@ interface Street {
 
 Pipeline, per city:
 
-1. **Normalize names.** Use `name:he`, else `name`. Trim, collapse whitespace, and unify geresh/gershayim variants (`'` `’` `׳` → `׳`, `"` `”` `״` → `״`). Do not strip prefixes like "שדרות": שדרות ויצמן and ויצמן can be different streets.
+1. **Normalize names.** In Israeli cities use `name:he`, else `name`; elsewhere use `name` only, because the few famous streets that have a Hebrew name would otherwise split from their unevenly tagged neighbors. Trim and collapse whitespace. For names in Hebrew script, unify geresh/gershayim variants (`'` `’` `׳` → `׳`, `"` `”` `״` → `״`). Do not strip prefixes like "שדרות": שדרות ויצמן and ויצמן can be different streets.
 2. **Drop roundabouts** (`junction=roundabout|circular`) from length, since a named roundabout would add its circumference. Also treat a closed way whose name starts with "כיכר" as a roundabout: Kfar Saba has several without the junction tag. Drop pedestrian areas (`area=yes`), whose outline is not a street. Keep all of these out of the drawing too.
 3. **Clip to the boundary.** Overpass `way(area)` returns any way with at least one node inside, so ways crossing the border stick out. Split each way at the boundary outline (own code, with an `rbush` index of boundary edges, rather than `turf.lineSplit`) and keep the pieces whose midpoint is inside the polygon. Mark the street `clipped`. Result: length counts only the part inside the city. A clipped street with less than 100 m inside the city, and less than half of its ways' length inside, is a neighboring city's street poking over the border; drop it.
 4. **Group by normalized name.**
@@ -166,6 +173,9 @@ The numbers are only as good as OSM tagging, and some will be off by tens of met
 | Unnamed alleys and parking lanes                              | Noise                                   | Excluded by the highway filter and `[name]`                    |
 | Overpass slow or rate-limited                                 | Stuck loading                           | Timeout, retry, fallback endpoint, cache                       |
 | Large city (Jerusalem, Tel Aviv)                              | Slow render with thousands of polylines | Use Leaflet `preferCanvas: true`; worker for geometry          |
+| Huge city (London, New York)                                  | Overpass timeout, browser out of memory | Size check from the search bounding box; ask for a district    |
+| Names in other scripts ("Rue de l'Église")                    | Apostrophe turned into a Hebrew geresh  | Geresh/gershayim rules only apply to Hebrew names              |
+| Places without street names (most of Japan)                   | Short or empty list                     | Expected: addresses there use blocks, not streets              |
 
 If the debug panel shows a real OSM mistake in Kfar Saba (wrong name, missing `oneway`), the right fix is editing OSM itself. That is also a nice thing to do together with the kid.
 
@@ -197,5 +207,12 @@ Acceptance on real data (Kfar Saba):
 - [ ] The top 10 longest and the 10 shortest streets are reviewed by hand in the debug panel against the map, and each looks plausible; anything off is either an algorithm fix or a noted OSM issue.
 - [ ] Sort toggle, filter, list→map and map→list selection all work on desktop and on a phone.
 - [ ] Picking a second city (e.g. Ra'anana) works without a reload.
+
+**6. World cities** (added after v1). Nominatim world search in the picker, city size check, local street names outside Israel, recent cities. Fixtures: `hoboken.json` (a street grid in New Jersey), `monaco.json` (hills and French names) and `nominatim.json`.
+
+- [x] A grid city comes out mostly N-S and E-W (Hoboken: over 85%).
+- [x] French names keep their apostrophes; no Hebrew geresh in non-Hebrew names.
+- [x] Searching "hoboken" offers הובוקן with its country; it loads with English street names.
+- [x] Tokyo (the metropolis) is shown as too big and can't be picked.
 
 Suggested first prompt for Claude Code: "Read DESIGN.md. Implement milestone 1 only, then stop and summarize." Save this doc as `DESIGN.md` in the repo root (export as Markdown).

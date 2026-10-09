@@ -25,7 +25,7 @@ import {
   type Projection,
   type XY,
 } from './geometry';
-import { streetNameOf } from './names';
+import { streetNameOf, type NameKeys } from './names';
 import { classifyOrientation, type Orientation, type WeightedPoint } from './orientation';
 
 export type StreetFlag = 'dual-carriageway' | 'clipped' | 'split-components' | 'tiny';
@@ -84,6 +84,8 @@ export interface BuildStreetsOptions {
   projection: Projection;
   /** When given, ways are clipped to it. */
   boundary?: BoundaryIndex;
+  /** Tag keys for the street name; defaults to Hebrew first. */
+  nameKeys?: NameKeys;
   onProgress?: (step: 'clip' | 'group' | 'measure', fraction: number) => void;
 }
 
@@ -95,12 +97,12 @@ export interface NamedPieces {
 
 /** Steps 1–4 of the pipeline: name, drop roundabouts, clip, group by name. */
 export function piecesByName(ways: OsmWay[], opts: BuildStreetsOptions): NamedPieces {
-  const { projection, boundary, onProgress } = opts;
+  const { projection, boundary, nameKeys, onProgress } = opts;
   const groups = new Map<string, Piece[]>();
   const clippedNames = new Set<string>();
   ways.forEach((way, i) => {
     if (i % 200 === 0) onProgress?.('clip', i / ways.length);
-    const name = streetNameOf(way.tags);
+    const name = streetNameOf(way.tags, nameKeys);
     if (!name || !way.geometry || isRoundabout(way, name) || isArea(way.tags)) return;
     const xy = way.geometry.filter((g) => g !== null).map((g) => projection.toXY(g.lon, g.lat));
     if (xy.length < 2) return;

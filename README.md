@@ -1,11 +1,11 @@
 # חוקרי הרחובות · Street Explorer
 
-Pick an Israeli city, and see all of its named streets on a map and in a list sorted by
-length, with each street's orientation. Built for a curious kid and a parent to explore
+Pick a city, in Israel or anywhere in the world, and see all of its named streets on a map
+and in a list sorted by length, with each street's orientation. Built for a curious kid and a parent to explore
 together, so "which street is longest?" gets a believable answer.
 
-Everything runs in the browser: data comes straight from OpenStreetMap's Overpass API, and
-the geometry runs in a Web Worker. There is no backend. See [DESIGN.md](DESIGN.md) for the
+Everything runs in the browser: data comes straight from OpenStreetMap's Overpass API (and
+Nominatim for world search), and the geometry runs in a Web Worker. There is no backend. See [DESIGN.md](DESIGN.md) for the
 full design.
 
 ## Run it
@@ -24,6 +24,12 @@ policy requires a valid Referer.
 
 1. Type a city name (Hebrew or English) and press **הצג במפה**. Regional councils are
    hidden unless you tick **כולל מועצות אזוריות**.
+   For a city outside Israel, type its name and pick **חיפוש ״…״ בכל העולם** at the end
+   of the list (or just press Enter when nothing in Israel matches). Results show in Hebrew
+   when OSM has a Hebrew name. Cities you opened are remembered for next time.
+   Very large cities get a warning (the download can take minutes). Huge ones, like London,
+   New York or Tokyo, can't be picked: search for a district instead (Manhattan,
+   Westminster, Shibuya).
 2. The first load of a city (one Overpass request for boundary and streets) takes
    5–30 s, sometimes more when Overpass is busy. After
    that it comes from the browser cache (IndexedDB, 30 days) and loads instantly.
@@ -39,7 +45,8 @@ In the console, `__app.store.get()` shows the full state.
 A "street" is every counted way in the city that shares a normalized name. The pipeline
 (`src/geo/`):
 
-1. **Names:** use `name:he`, falling back to `name`; unify geresh and gershayim variants
+1. **Names:** in Israeli cities use `name:he`, falling back to `name`; elsewhere use the
+   local `name`. In Hebrew names, unify geresh and gershayim variants
    (`"` `”` `''` → `״`, `'` `’` → `׳`).
 2. **Dropped:** roundabouts (`junction=roundabout`, or a closed way named `כיכר …`) and
    pedestrian areas (`area=yes`).
@@ -70,6 +77,9 @@ npm run e2e        # Overpass served from fixtures: deterministic
 npm run e2e:live   # real Overpass: timings depend on server load
 ```
 
+Fixtures: `hoboken.json` (a street grid) and `monaco.json` (hills, French names) are real
+Overpass responses too, and `nominatim.json` holds real search answers.
+
 The fixture `test/fixtures/kfar-saba.json` is a real Overpass response (OSM data as of
 2026-10-09), stored as separate boundary and streets responses. To refresh it, run
 `cityQuery(1383631)` from `src/data/overpass.ts` and split the result with
@@ -83,6 +93,8 @@ src/
   data/overpass.ts     queries, fetch with timeout, retry and endpoint fallback
   data/cache.ts        IndexedDB cache (idb-keyval)
   data/loader.ts       city list (cache → Overpass → bundled snapshot), city raw data
+  data/search.ts       world search through Nominatim, city size from its bounding box
+  data/recent.ts       world cities opened before (localStorage)
   geo/boundary.ts      boundary ring assembly, spatial index, line clipping
   geo/streets.ts       naming, grouping, components, dedup, measuring, flags
   geo/orientation.ts   PCA orientation and buckets
@@ -94,7 +106,9 @@ src/
 ## Data and attribution
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright),
-available under the ODbL. Tiles come from the OSM standard tile layer. Lengths are only
+available under the ODbL. Search by [Nominatim](https://nominatim.org/), used within its
+[usage policy](https://operations.osmfoundation.org/policies/nominatim/): one request per
+second at most, and only when you ask for a search. Tiles come from the OSM standard tile layer. Lengths are only
 as good as OSM tagging. If the debug panel shows a mapping mistake (a wrong name, a
 roundabout without `junction=roundabout`, a missing `oneway`), the best fix is to edit
 OSM itself.

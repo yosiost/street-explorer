@@ -4,6 +4,7 @@ import { DEFAULT_CENTER, DEFAULT_ZOOM, TILE_ATTRIBUTION, TILE_MAX_ZOOM, TILE_URL
 import type { CityResult } from '../geo/pipeline';
 import type { Street } from '../geo/streets';
 import { ORIENTATION_LABELS } from '../geo/orientation';
+import { bdi } from './dom';
 import { formatLength, formatPitches } from './format';
 
 const STREET_STYLE: L.PolylineOptions = { color: '#5b6b7f', weight: 3, opacity: 0.85 };
@@ -158,7 +159,7 @@ function popupContent(street: Street): HTMLElement {
   el.className = 'street-popup';
   el.dir = 'rtl';
   const h = document.createElement('h3');
-  h.textContent = street.name;
+  h.append(bdi(street.name));
   const dl = document.createElement('dl');
   const rows: [string, string][] = [
     ['אורך', formatLength(street.lengthM)],

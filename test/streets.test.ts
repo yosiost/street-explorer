@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeName } from '../src/geo/names';
+import { LOCAL_NAME_KEYS, normalizeName, streetNameOf } from '../src/geo/names';
 import { build, square, way } from './helpers';
 
 const ONEWAY = { oneway: 'yes' };
@@ -339,5 +339,23 @@ describe('normalizeName', () => {
 
   it('trims and collapses whitespace, keeps prefixes', () => {
     expect(normalizeName('  שדרות   ויצמן ')).toBe('שדרות ויצמן');
+  });
+
+  it('leaves apostrophes and quotes alone in other scripts', () => {
+    expect(normalizeName("Rue de l'Église")).toBe("Rue de l'Église");
+    expect(normalizeName('St John’s  Road')).toBe('St John’s Road');
+  });
+});
+
+describe('streetNameOf', () => {
+  const tags = { name: 'Champs-Élysées', 'name:he': 'שאנז אליזה' };
+  it('prefers name:he by default (Israeli cities)', () => {
+    expect(streetNameOf(tags)).toBe('שאנז אליזה');
+    expect(streetNameOf({ name: 'הרצל' })).toBe('הרצל');
+  });
+
+  it('uses the local name outside Israel', () => {
+    expect(streetNameOf(tags, LOCAL_NAME_KEYS)).toBe('Champs-Élysées');
+    expect(streetNameOf({ 'name:he': 'רק עברית' }, LOCAL_NAME_KEYS)).toBeNull();
   });
 });

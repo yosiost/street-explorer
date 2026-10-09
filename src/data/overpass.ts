@@ -19,8 +19,8 @@ out tags;`;
  * geometry, then named roads inside it. One request instead of two halves the exposure to
  * Overpass "too busy" errors.
  */
-export function cityQuery(relationId: number): string {
-  return `[out:json][timeout:120];
+export function cityQuery(relationId: number, timeoutS = 120): string {
+  return `[out:json][timeout:${timeoutS}];
 rel(${relationId})->.r;
 .r out geom;
 .r map_to_area->.city;
@@ -89,6 +89,8 @@ async function requestOnce(
   try {
     json = JSON.parse(text) as OverpassResponse;
   } catch {
+    // When the dispatcher is overloaded Overpass answers with an HTML error page.
+    if (/too busy|Dispatcher_Client/i.test(text)) throw new BusyError('server too busy');
     throw new Error('response is not JSON');
   }
   // Overpass reports query timeouts / memory errors as a 200 with a remark.

@@ -1,6 +1,7 @@
 import { searchKey } from '../data/cities';
 import { ORIENTATION_LABELS } from '../geo/orientation';
 import type { Street } from '../geo/streets';
+import { bdi } from './dom';
 import { formatLength } from './format';
 import type { State, Store } from './store';
 
@@ -73,7 +74,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
 
       const name = document.createElement('span');
       name.className = 'name';
-      name.textContent = street.name;
+      name.append(bdi(street.name));
       if (street.flags.includes('tiny')) {
         const tiny = document.createElement('span');
         tiny.className = 'tiny-mark';
@@ -104,7 +105,9 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     if (s.result && items.length === 0) {
       const li = document.createElement('li');
       li.className = 'empty';
-      li.textContent = 'אין רחוב בשם הזה';
+      li.textContent = s.result.streets.length
+        ? 'אין רחוב בשם הזה'
+        : 'לא מצאנו כאן רחובות עם שם ב־OpenStreetMap. יש מקומות, למשל ביפן, שבהם לרחובות אין שמות.';
       list.append(li);
     }
     markSelected(s.selectedStreetId, false);
@@ -128,12 +131,12 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
   function renderHeader(s: State) {
     controls.hidden = !s.result;
     if (!s.result || !s.shownCity) {
-      title.textContent = s.pickedCity?.name ?? '';
+      title.replaceChildren(bdi(s.pickedCity?.name ?? ''));
       summary.textContent = 'בחרו עיר ולחצו „הצג במפה״';
       return;
     }
     const total = s.result.streets.reduce((sum, x) => sum + x.lengthM, 0);
-    title.textContent = s.shownCity.name;
+    title.replaceChildren(bdi(s.shownCity.name));
     summary.textContent = `${s.result.streets.length.toLocaleString('he')} רחובות · ${(total / 1000).toFixed(1)} ק״מ בסך הכול`;
     sortButtons.forEach((b) =>
       b.setAttribute('aria-pressed', String(b.dataset.sort === s.sortDir)),
@@ -151,6 +154,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     ) {
       renderHeader(s);
       renderRows(s);
+      if (s.result !== prev.result) list.scrollTop = 0; // a new city starts at the top
     } else if (s.pickedCity !== prev.pickedCity) {
       renderHeader(s);
     }

@@ -1,3 +1,4 @@
+import { OVERPASS_TIMEOUT_MS } from '../config';
 import { cacheKeys, cached, cacheGet, cacheSet } from './cache';
 import { parseCityList, type City } from './cities';
 import snapshot from './cities-snapshot.json';
@@ -50,13 +51,14 @@ export function splitCityResponse(res: OverpassResponse): CityRaw {
 /** Fetches (or reads from cache) the raw boundary and streets for one city. */
 export async function loadCityRaw(
   relationId: number,
-  opts: { signal?: AbortSignal } & Pick<RunQueryOptions, 'onRetry'> = {},
+  opts: { signal?: AbortSignal } & Pick<RunQueryOptions, 'onRetry' | 'timeoutMs'> = {},
 ): Promise<CityRaw & { fromCache: boolean }> {
-  const { signal, onRetry } = opts;
+  const { signal, onRetry, timeoutMs = OVERPASS_TIMEOUT_MS } = opts;
   let fetched = false;
   const res = await cached(cacheKeys.city(relationId), () => {
     fetched = true;
-    return runQuery(cityQuery(relationId), { signal, onRetry });
+    const query = cityQuery(relationId, Math.round(timeoutMs / 1000));
+    return runQuery(query, { signal, onRetry, timeoutMs });
   });
   return { ...splitCityResponse(res), fromCache: !fetched };
 }

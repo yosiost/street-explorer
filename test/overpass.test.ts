@@ -70,6 +70,14 @@ describe('runQuery', () => {
     expect(t.calls).toEqual(['a.test', 'b.test']);
   });
 
+  it('treats the HTML "too busy" page as busy', async () => {
+    const page =
+      '<html><p>Error: runtime error: Dispatcher_Client::request_read_and_idx::timeout. The server is probably too busy to handle your request.</p></html>';
+    const t = setup([new Response(page, { status: 200 }), ok(EMPTY)]);
+    await expect(t.run()).resolves.toEqual(EMPTY);
+    expect(t.calls).toEqual(['a.test', 'a.test']);
+  });
+
   it('throws OverpassError when every endpoint fails', async () => {
     const t = setup([status(504), status(504), status(504), status(504)]);
     await expect(t.run()).rejects.toBeInstanceOf(OverpassError);
