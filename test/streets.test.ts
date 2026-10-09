@@ -276,6 +276,47 @@ describe('grouping', () => {
     expect(streets[0]!.segments).toHaveLength(1);
   });
 
+  it('a closed way named כיכר without a junction tag is treated as a roundabout', () => {
+    const streets = build([
+      way('כיכר הפרחים', [
+        [0, 0],
+        [20, 20],
+        [40, 0],
+        [20, -20],
+        [0, 0],
+      ]),
+    ]);
+    expect(streets).toHaveLength(0);
+  });
+
+  it('an open way named כיכר is kept', () => {
+    expect(
+      build([
+        way('כיכר המדינה', [
+          [0, 0],
+          [200, 0],
+        ]),
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it('a pedestrian area adds 0 m', () => {
+    const streets = build([
+      way(
+        'מדרחוב',
+        [
+          [0, 0],
+          [50, 0],
+          [50, 50],
+          [0, 50],
+          [0, 0],
+        ],
+        { highway: 'pedestrian', area: 'yes' },
+      ),
+    ]);
+    expect(streets).toHaveLength(0);
+  });
+
   it('flags streets under 30 m as tiny but keeps them', () => {
     const [s] = build([
       way('סמטה', [

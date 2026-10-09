@@ -64,9 +64,20 @@ function onewayOf(tags: Record<string, string> | undefined): 0 | 1 | -1 {
   return 0;
 }
 
-function isRoundabout(tags: Record<string, string> | undefined): boolean {
-  const j = tags?.junction;
-  return j === 'roundabout' || j === 'circular';
+function isRoundabout(way: OsmWay, name: string): boolean {
+  const j = way.tags?.junction;
+  if (j === 'roundabout' || j === 'circular') return true;
+  // Roundabouts are often mapped as a closed way named "כיכר …" without the junction tag.
+  const g = way.geometry;
+  const first = g?.[0];
+  const last = g?.[g.length - 1];
+  const closed = !!first && !!last && first.lat === last.lat && first.lon === last.lon;
+  return closed && name.startsWith('כיכר');
+}
+
+/** Pedestrian plazas mapped as areas: their outline is not a street length. */
+function isArea(tags: Record<string, string> | undefined): boolean {
+  return tags?.area === 'yes';
 }
 
 export interface BuildStreetsOptions {
@@ -90,7 +101,7 @@ export function piecesByName(ways: OsmWay[], opts: BuildStreetsOptions): NamedPi
   ways.forEach((way, i) => {
     if (i % 200 === 0) onProgress?.('clip', i / ways.length);
     const name = streetNameOf(way.tags);
-    if (!name || isRoundabout(way.tags) || !way.geometry) return;
+    if (!name || !way.geometry || isRoundabout(way, name) || isArea(way.tags)) return;
     const xy = way.geometry.filter((g) => g !== null).map((g) => projection.toXY(g.lon, g.lat));
     if (xy.length < 2) return;
     const { pieces, clipped } = boundary

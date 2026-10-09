@@ -64,6 +64,16 @@ describe('Kfar Saba fixture', () => {
     expect(w.orientation).toBe('E-W');
   });
 
+  it('roundabouts mapped without a junction tag are not streets', () => {
+    for (const name of ['כיכר מועדון ליונס', 'כיכר מועדון שרון', 'כיכר קולומבוס', 'כיכר העיר']) {
+      expect(byName.has(name), name).toBe(false);
+    }
+  });
+
+  it('a neighbor road crossing the border by a few meters is not listed', () => {
+    expect(byName.has('עין חי')).toBe(false);
+  });
+
   it('no border slivers under 5 m survive clipping', () => {
     expect(result.streets.filter((s) => s.lengthM < 5)).toEqual([]);
   });

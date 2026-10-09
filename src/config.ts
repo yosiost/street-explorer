@@ -45,7 +45,7 @@ export const HIGHWAY_TYPES = [
 
 export const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Bump when the geo pipeline changes; invalidates cached processed results only.
-export const PIPELINE_VERSION = 1;
+export const PIPELINE_VERSION = 2;
 
 // --- Street model ---
 
@@ -58,7 +58,7 @@ export const DUAL_FLAG_SHARE = 0.2;
 export const TINY_STREET_M = 30;
 // A clipped street with less than this much inside the city, and less than
 // BORDER_SLIVER_SHARE of its ways inside, is a neighbor's street poking over the border.
-export const BORDER_SLIVER_M = 50;
+export const BORDER_SLIVER_M = 100;
 export const BORDER_SLIVER_SHARE = 0.5;
 
 // --- Orientation ---
