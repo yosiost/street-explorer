@@ -8,6 +8,10 @@ Everything runs in the browser: data comes straight from OpenStreetMap's Overpas
 Nominatim for world search), and the geometry runs in a Web Worker. There is no backend. See [DESIGN.md](DESIGN.md) for the
 full design.
 
+**Live:** https://yosiost.github.io/street-explorer/. On a phone or tablet, use "Add to
+Home Screen" to install it as an app. Kfar Saba ships with the app, so it opens instantly
+and works offline; any city opened once also works offline afterwards.
+
 ## Run it
 
 ```sh
@@ -19,6 +23,18 @@ npm run preview    # serve dist/ locally
 
 The app must be served over http(s), not opened from `file://`, because the OSM tile
 policy requires a valid Referer.
+
+**Deploy:** every push to `main` runs lint, the unit tests and the build in GitHub Actions
+(`.github/workflows/pages.yml`) and publishes `dist/` to GitHub Pages.
+
+**Offline and install:** `public/manifest.webmanifest` and a service worker (`pwa/sw.js`,
+built into `dist/sw.js` by the plugin in `vite.config.ts` with the list of files to cache).
+The app files are cached at install; pages and map tiles are network-first, with the copy
+last seen used offline (only tiles you have looked at, as the OSM tile policy allows).
+
+**Bundled city:** `public/data/1383631.json` is Kfar Saba's Overpass answer, used instead of
+Overpass when the browser has no cached copy, so the first visit shows streets right away.
+Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
 
 ## Use it
 

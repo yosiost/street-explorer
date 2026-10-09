@@ -27,3 +27,23 @@ export function rememberRecent(city: City, current: City[]): City[] {
   }
   return next;
 }
+
+// The city shown last, so the app reopens on it.
+const LAST_KEY = 'street-explorer:last-city';
+
+export function loadLastCity(): City | null {
+  try {
+    const c = JSON.parse(localStorage.getItem(LAST_KEY) ?? 'null') as City | null;
+    return c && typeof c.id === 'number' && typeof c.name === 'string' ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastCity(city: City): void {
+  try {
+    localStorage.setItem(LAST_KEY, JSON.stringify(city));
+  } catch {
+    // Storage blocked: the app opens on the default city next time.
+  }
+}

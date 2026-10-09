@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e": "node e2e/smoke.mjs",
-    "e2e:live": "node e2e/live.mjs"
+    "e2e:live": "node e2e/live.mjs",
+    "snapshot": "node scripts/snapshot.mjs"
   },
   "dependencies": {
     "@turf/helpers": "^7.4.0",

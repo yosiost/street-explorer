@@ -1,11 +1,16 @@
 import './style.css';
-import { DEFAULT_CITY_ID, OVERPASS_LARGE_TIMEOUT_MS, PIPELINE_VERSION } from './config';
+import {
+  BUNDLED_CITY_IDS,
+  DEFAULT_CITY_ID,
+  OVERPASS_LARGE_TIMEOUT_MS,
+  PIPELINE_VERSION,
+} from './config';
 import { cacheGet, cacheKeys, cacheSet } from './data/cache';
 import { citySize, isIsraeli, type City } from './data/cities';
 import { loadCityList, loadCityRaw, type CityRaw } from './data/loader';
 import { OverpassError } from './data/overpass';
 import { loadHome, saveHome } from './data/home';
-import { loadRecent, rememberRecent } from './data/recent';
+import { loadLastCity, loadRecent, rememberRecent, saveLastCity } from './data/recent';
 import type { CityResult } from './geo/pipeline';
 import type { Street } from './geo/streets';
 import { applyStaticText, getLang, setLang } from './i18n';
@@ -220,6 +225,7 @@ async function loadCity(city: City) {
     if (job !== j) return;
     job = null;
     mapView.showCity(result);
+    saveLastCity(city);
     store.set({
       // Only search results are remembered; the Israeli list is always there.
       recentCities: city.context
@@ -268,8 +274,34 @@ if (new URLSearchParams(location.search).has('debug')) {
 
 // --- Startup ---
 
-void loadCityList().then(({ cities, source }) => {
-  const picked = cities.find((c) => c.id === DEFAULT_CITY_ID) ?? cities[0] ?? null;
-  store.set({ cities, pickedCity: picked });
+/** True when a city can be shown without going to Overpass. */
+async function isAvailableOffline(id: number): Promise<boolean> {
+  if (BUNDLED_CITY_IDS.includes(id)) return true;
+  return (
+    (await cacheGet(cacheKeys.processed(id, PIPELINE_VERSION))) !== undefined ||
+    (await cacheGet(cacheKeys.city(id))) !== undefined
+  );
+}
+
+void loadCityList().then(async ({ cities, source }) => {
   if (source === 'snapshot') console.info('[cities] using bundled list');
+  const fallback = cities.find((c) => c.id === DEFAULT_CITY_ID) ?? cities[0] ?? null;
+  // Reopen on the last city when it is still cached, otherwise on the default city, which
+  // ships with the app: either way the map shows streets without waiting for a server.
+  const last = loadLastCity();
+  const start =
+    last && (await isAvailableOffline(last.id))
+      ? (cities.find((c) => c.id === last.id) ?? last)
+      : fallback;
+  store.set({ cities, pickedCity: start });
+  if (start && (await isAvailableOffline(start.id)) && !store.get().result && !job) {
+    void loadCity(start);
+  }
 });
+
+// Installable app and offline use; only in a production build (dev serves files live).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('[sw]', err));
+  });
+}

@@ -52,9 +52,13 @@ export class MapView {
       DEFAULT_CENTER,
       DEFAULT_ZOOM,
     );
-    L.tileLayer(TILE_URL, { maxZoom: TILE_MAX_ZOOM, attribution: TILE_ATTRIBUTION }).addTo(
-      this.map,
-    );
+    // CORS tiles (OSM allows it), so the service worker can keep checked copies for
+    // offline use instead of opaque ones.
+    L.tileLayer(TILE_URL, {
+      maxZoom: TILE_MAX_ZOOM,
+      attribution: TILE_ATTRIBUTION,
+      crossOrigin: true,
+    }).addTo(this.map);
     this.group.addTo(this.map);
 
     this.group.on('click', (e: L.LeafletMouseEvent) => {

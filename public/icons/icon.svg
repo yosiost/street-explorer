@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed background so the same art works as a maskable icon. -->
+  <rect width="512" height="512" fill="#e8590c"/>
+  <g stroke-linecap="round" fill="none">
+    <!-- A small street grid, kept inside the maskable safe zone (center 80%). -->
+    <path d="M110 190 H402 M110 322 H402" stroke="#fff" stroke-width="22" opacity="0.55"/>
+    <path d="M190 110 V402 M322 110 V402" stroke="#fff" stroke-width="22" opacity="0.55"/>
+    <!-- The "longest street": one bold road across. -->
+    <path d="M96 400 L416 112" stroke="#fff" stroke-width="44"/>
+  </g>
+  <!-- Our street's star. -->
+  <path d="M256 196 l17.6 35.7 39.4 5.7 -28.5 27.8 6.7 39.2 -35.2 -18.5 -35.2 18.5 6.7 -39.2 -28.5 -27.8 39.4 -5.7z" fill="#f2b705" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+</svg>

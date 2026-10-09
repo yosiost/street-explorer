@@ -1,4 +1,4 @@
-import { OVERPASS_TIMEOUT_MS } from '../config';
+import { BUNDLED_CITY_IDS, OVERPASS_TIMEOUT_MS } from '../config';
 import { cacheKeys, cached, cacheGet, cacheSet } from './cache';
 import { parseCityList, type City } from './cities';
 import snapshot from './cities-snapshot.json';
@@ -48,14 +48,35 @@ export function splitCityResponse(res: OverpassResponse): CityRaw {
   };
 }
 
-/** Fetches (or reads from cache) the raw boundary and streets for one city. */
+/** A city shipped with the app, or null. Same format as an Overpass cityQuery answer. */
+export async function loadBundledCity(
+  relationId: number,
+  fetchImpl: typeof fetch = (...args) => fetch(...args),
+): Promise<OverpassResponse | null> {
+  if (!BUNDLED_CITY_IDS.includes(relationId)) return null;
+  try {
+    const res = await fetchImpl(`${import.meta.env.BASE_URL}data/${relationId}.json`);
+    if (!res.ok) return null;
+    const json = (await res.json()) as OverpassResponse;
+    return Array.isArray(json.elements) ? json : null;
+  } catch {
+    return null; // fall back to Overpass
+  }
+}
+
+/**
+ * Raw boundary and streets for one city: from the cache, else the copy shipped with the app,
+ * else Overpass.
+ */
 export async function loadCityRaw(
   relationId: number,
   opts: { signal?: AbortSignal } & Pick<RunQueryOptions, 'onRetry' | 'timeoutMs'> = {},
 ): Promise<CityRaw & { fromCache: boolean }> {
   const { signal, onRetry, timeoutMs = OVERPASS_TIMEOUT_MS } = opts;
   let fetched = false;
-  const res = await cached(cacheKeys.city(relationId), () => {
+  const res = await cached(cacheKeys.city(relationId), async () => {
+    const bundled = await loadBundledCity(relationId);
+    if (bundled) return bundled;
     fetched = true;
     const query = cityQuery(relationId, Math.round(timeoutMs / 1000));
     return runQuery(query, { signal, onRetry, timeoutMs });

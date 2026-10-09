@@ -85,7 +85,13 @@ const fakeSpeech = () => {
 
 // ---------- Desktop happy path ----------
 {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'he-IL' });
+  // Service workers off: they would sit between the page and the routed fixtures. The
+  // offline section below tests them.
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    locale: 'he-IL',
+    serviceWorkers: 'block',
+  });
   await ctx.addInitScript(fakeSpeech);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
@@ -93,6 +99,11 @@ const fakeSpeech = () => {
   await page.goto(`${BASE}/?debug=1`);
   await page.waitForFunction(() => !document.querySelector('#city-input').disabled);
   check((await page.inputValue('#city-input')) === 'כפר סבא', 'default city is Kfar Saba');
+  await page.waitForSelector('.street-row', { timeout: 10000 });
+  check(
+    (await page.evaluate(() => window.__app.store.get().result.streets.length)) > 400,
+    'Kfar Saba opens by itself, from the data shipped with the app',
+  );
   await shot(page, '01-start');
 
   // Type-ahead
@@ -507,7 +518,10 @@ const fakeSpeech = () => {
 
 // ---------- Cancel and error ----------
 {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    serviceWorkers: 'block',
+  });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await routeOverpass(page, 'slow');
@@ -515,6 +529,10 @@ const fakeSpeech = () => {
   await page.waitForFunction(() => !document.querySelector('#city-input').disabled, null, {
     timeout: 15000,
   });
+  // Kfar Saba ships with the app, so use a city that has to come from Overpass.
+  await page.click('#city-input');
+  await page.fill('#city-input', 'רעננה');
+  await page.keyboard.press('Enter');
   await page.click('#map-it');
   await page.waitForSelector('#loading-panel:not([hidden])');
   await shot(page, '05-loading');
@@ -541,6 +559,44 @@ const fakeSpeech = () => {
   await ctx.close();
 }
 
+// ---------- Installable and offline ----------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => errors.push(e.message));
+  await routeOverpass(page);
+  await page.goto(BASE);
+  const manifest = await page.evaluate(async () => {
+    const href = document.querySelector('link[rel=manifest]').href;
+    return (await fetch(href)).json();
+  });
+  check(
+    manifest.display === 'standalone' && manifest.icons.some((i) => i.sizes === '512x512'),
+    `installable: manifest "${manifest.short_name}" with icons`,
+  );
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.waitForSelector('.street-row', { timeout: 15000 });
+  // On a first visit the tiles load before the worker controls the page; a second
+  // (online) visit goes through it and keeps them.
+  await page.reload();
+  await page.waitForSelector('.street-row', { timeout: 15000 });
+  await page.waitForTimeout(2500);
+  await ctx.setOffline(true);
+  await page.reload();
+  await page.waitForSelector('.street-row', { timeout: 15000 }).catch(() => {});
+  const offline = await page.evaluate(() => ({
+    rows: document.querySelectorAll('.street-row').length,
+    tiles: [...document.querySelectorAll('.leaflet-tile-loaded')].length,
+  }));
+  check(
+    offline.rows > 400 && offline.tiles > 0,
+    `offline: the app reloads and shows Kfar Saba (${offline.rows} streets, ${offline.tiles} map tiles from cache)`,
+  );
+  await shot(page, '15-offline');
+  await ctx.setOffline(false);
+  await ctx.close();
+}
+
 // ---------- Mobile ----------
 {
   const ctx = await browser.newContext({
@@ -548,6 +604,7 @@ const fakeSpeech = () => {
     deviceScaleFactor: 2,
     isMobile: true,
     hasTouch: true,
+    serviceWorkers: 'block',
   });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));

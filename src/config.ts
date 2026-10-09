@@ -73,6 +73,10 @@ export const CITY_LARGE_KM2 = 400;
 export const CITY_MAX_KM2 = 2_000;
 export const OVERPASS_LARGE_TIMEOUT_MS = 300_000;
 
+// Cities shipped with the app (public/data/<id>.json, refreshed by `npm run snapshot`), so
+// they open instantly the first time, without waiting for Overpass.
+export const BUNDLED_CITY_IDS = [DEFAULT_CITY_ID];
+
 export const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Bump when the geo pipeline changes; invalidates cached processed results only.
 export const PIPELINE_VERSION = 5;
