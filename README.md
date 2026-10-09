@@ -36,6 +36,24 @@ policy requires a valid Referer.
 3. Click a street in the list to highlight and zoom to it, or click a street on the map to
    find it in the list. **Esc** or a click on empty map clears the selection.
 
+4. **For kids:**
+   - **🎮 Which is longer?** Two streets light up in red and blue. Tap the one you think is
+     longer (a button, or the line on the map). Both lengths race as bars, and the winner
+     gets a 🏆. It starts easy (one street at least twice as long) and gets closer as the
+     streak grows. Tiny fragments are never asked about.
+   - **⭐ Our street:** in any street's popup, mark it as "our street". Every other street is
+     then compared with it ("like 8 of our street, end to end"), and it is drawn in gold
+     with a star. Popups also count kid steps (half a meter each).
+   - **🔊 Read aloud:** popups and the game can read names and lengths aloud with the
+     browser's built-in voices. A Hebrew voice reads Hebrew and an English voice reads
+     English, so a Hebrew street name is read in Hebrew even in the English UI.
+5. **עברית / English:** the button at the end of the header switches the whole app,
+   including direction (RTL/LTR), street and city names (OSM `name:en`, when the street
+   has one), search results and the reading voice. The choice is remembered; `?lang=en`
+   in the URL works too. The map tiles keep their local labels.
+
+"our street", recent cities and the language live in the browser (localStorage).
+
 Add `?debug=1` to the URL for the debug panel. For every street it shows raw vs
 deduplicated length, the paired (dual-carriageway) share, flags and links to each OSM way.
 In the console, `__app.store.get()` shows the full state.
@@ -95,12 +113,16 @@ src/
   data/loader.ts       city list (cache → Overpass → bundled snapshot), city raw data
   data/search.ts       world search through Nominatim, city size from its bounding box
   data/recent.ts       world cities opened before (localStorage)
+  data/home.ts         "our street" (localStorage)
+  kids/units.ts        kid steps, comparisons with our street, read-aloud text
+  kids/pair.ts         picking fair "which is longer?" pairs
+  i18n.ts              every UI string in Hebrew and English
   geo/boundary.ts      boundary ring assembly, spatial index, line clipping
   geo/streets.ts       naming, grouping, components, dedup, measuring, flags
   geo/orientation.ts   PCA orientation and buckets
   geo/pipeline.ts      one city: raw Overpass JSON → streets
   worker.ts            runs the pipeline off the main thread
-  ui/                  picker, map, list, loading/error panel, debug panel
+  ui/                  picker, map, list, popup, game, speech, loading/error, debug
 ```
 
 ## Data and attribution

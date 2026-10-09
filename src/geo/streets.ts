@@ -25,7 +25,7 @@ import {
   type Projection,
   type XY,
 } from './geometry';
-import { streetNameOf, type NameKeys } from './names';
+import { normalizeName, streetNameOf, type NameKeys } from './names';
 import { classifyOrientation, type Orientation, type WeightedPoint } from './orientation';
 
 export type StreetFlag = 'dual-carriageway' | 'clipped' | 'split-components' | 'tiny';
@@ -42,7 +42,11 @@ export interface Street {
   flags: StreetFlag[];
   /** Share of rawLengthM found to be one of two opposite carriageways (debug). */
   pairedShare: number;
+  /** Names for the other UI language, from `name:en` / `name:he` (most common by length). */
+  altNames?: AltNames;
 }
+
+export type AltNames = Partial<Record<'he' | 'en', string>>;
 
 /** One clipped piece of one OSM way. */
 export interface Piece {
@@ -54,6 +58,8 @@ export interface Piece {
   lengthM: number; // geodesic
   /** Geodesic length of the whole OSM way before clipping. */
   wayLengthM: number;
+  /** The way's `name:he` and `name:en`, normalized. */
+  altNames?: AltNames;
   bbox: BBox;
 }
 
@@ -124,6 +130,7 @@ export function piecesByName(ways: OsmWay[], opts: BuildStreetsOptions): NamedPi
         lengthM,
         wayLengthM: clipped ? wayLengthM : lengthM,
         bbox: bboxOf(pxy),
+        altNames: altNamesOf(way.tags),
       };
       const list = groups.get(name);
       if (list) list.push(piece);
@@ -269,6 +276,35 @@ function opposesAt(p: XY, dx: number, dy: number, other: Piece): boolean {
   return dx * ox + dy * oy < PAIR_COS;
 }
 
+function altNamesOf(tags: Record<string, string> | undefined): AltNames | undefined {
+  const he = tags?.['name:he'] && normalizeName(tags['name:he']);
+  const en = tags?.['name:en'] && normalizeName(tags['name:en']);
+  if (!he && !en) return undefined;
+  return { ...(he ? { he } : {}), ...(en ? { en } : {}) };
+}
+
+/** For each language, the alternative name covering the most length among the pieces. */
+function commonAltNames(pieces: Piece[], suffix: string): AltNames | undefined {
+  const out: AltNames = {};
+  for (const lang of ['he', 'en'] as const) {
+    const byName = new Map<string, number>();
+    for (const p of pieces) {
+      const n = p.altNames?.[lang];
+      if (n) byName.set(n, (byName.get(n) ?? 0) + p.lengthM);
+    }
+    let best: string | undefined;
+    let bestLen = 0;
+    for (const [n, len] of byName) {
+      if (len > bestLen) {
+        best = n;
+        bestLen = len;
+      }
+    }
+    if (best) out[lang] = best + suffix;
+  }
+  return out.he || out.en ? out : undefined;
+}
+
 /** Steps 4–8: group, split components, dedup, measure, flag; plus orientation. */
 export function buildStreets(ways: OsmWay[], opts: BuildStreetsOptions): Street[] {
   const { groups, clippedNames } = piecesByName(ways, opts);
@@ -285,16 +321,17 @@ export function buildStreets(ways: OsmWay[], opts: BuildStreetsOptions): Street[
 
     clusters.forEach(({ ps }, k) => {
       const split = clusters.length > 1;
-      streets.push(
-        measureStreet(
-          ps,
-          split ? `${name} (${k + 1})` : name,
-          `${name}#${k}`,
-          split,
-          clippedNames.has(name),
-          opts.projection,
-        ),
+      const street = measureStreet(
+        ps,
+        split ? `${name} (${k + 1})` : name,
+        `${name}#${k}`,
+        split,
+        clippedNames.has(name),
+        opts.projection,
       );
+      const alt = commonAltNames(ps, split ? ` (${k + 1})` : '');
+      if (alt) street.altNames = alt;
+      streets.push(street);
     });
   }
   opts.onProgress?.('measure', 1);

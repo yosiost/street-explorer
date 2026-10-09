@@ -6,12 +6,13 @@
     <meta name="description" content="בוחרים עיר ורואים את כל הרחובות שלה, מהארוך לקצר" />
     <title>חוקרי הרחובות</title>
   </head>
+  <!-- Text marked data-i18n is replaced from src/i18n.ts; the Hebrew here is the first paint. -->
   <body>
     <header class="app-header">
-      <h1 class="app-title">חוקרי הרחובות</h1>
+      <h1 class="app-title" data-i18n="appTitle">חוקרי הרחובות</h1>
       <form class="picker" id="picker" autocomplete="off">
         <div class="combo">
-          <label class="visually-hidden" for="city-input">בחרו עיר</label>
+          <label class="visually-hidden" for="city-input" data-i18n="pickCity">בחרו עיר</label>
           <input
             id="city-input"
             type="text"
@@ -20,74 +21,128 @@
             aria-expanded="false"
             aria-controls="city-listbox"
             placeholder="טוען ערים…"
+            data-i18n-attr="placeholder:loadingCities"
             disabled
           />
-          <ul id="city-listbox" role="listbox" aria-label="ערים" hidden></ul>
+          <ul
+            id="city-listbox"
+            role="listbox"
+            aria-label="ערים"
+            data-i18n-attr="aria-label:cities"
+            hidden
+          ></ul>
         </div>
-        <button type="submit" id="map-it" disabled>הצג במפה</button>
+        <button type="submit" id="map-it" data-i18n="mapIt" disabled>הצג במפה</button>
         <label class="regional-toggle">
           <input type="checkbox" id="show-regional" />
-          <span>כולל מועצות אזוריות</span>
+          <span data-i18n="showRegional">כולל מועצות אזוריות</span>
         </label>
       </form>
+      <button
+        type="button"
+        id="lang-toggle"
+        class="lang-toggle"
+        data-i18n-attr="aria-label:switchToLabel"
+        aria-label="Switch to English"
+      >
+        <svg class="globe" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path
+            d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"
+          />
+        </svg>
+        <span class="lang-label" lang="en" data-i18n="switchTo">English</span>
+      </button>
     </header>
 
     <main class="city-view">
-      <section class="map-pane" aria-label="מפה">
+      <section class="map-pane" aria-label="מפה" data-i18n-attr="aria-label:map">
         <div id="map"></div>
 
         <div class="overlay" id="loading-panel" role="status" aria-live="polite" hidden>
           <div class="overlay-card">
             <ol class="steps" id="loading-steps"></ol>
             <p class="note" id="loading-note"></p>
-            <button type="button" id="cancel-load" class="secondary">ביטול</button>
+            <button type="button" id="cancel-load" class="secondary" data-i18n="cancel">
+              ביטול
+            </button>
           </div>
         </div>
 
         <div class="overlay" id="error-panel" role="alert" hidden>
           <div class="overlay-card">
             <p id="error-text"></p>
-            <button type="button" id="retry-load">נסו שוב</button>
+            <button type="button" id="retry-load" data-i18n="retry">נסו שוב</button>
           </div>
         </div>
       </section>
 
-      <aside class="list-pane" aria-label="רשימת רחובות">
+      <aside class="list-pane" aria-label="רשימת רחובות" data-i18n-attr="aria-label:streetList">
         <div class="list-header">
           <h2 id="city-name"></h2>
           <p class="list-summary" id="list-summary"></p>
           <div class="list-controls" hidden>
-            <div class="sort-toggle" role="group" aria-label="מיון">
-              <button type="button" data-sort="desc" aria-pressed="true">הכי ארוך קודם</button>
-              <button type="button" data-sort="asc" aria-pressed="false">הכי קצר קודם</button>
+            <button type="button" id="start-game" class="game-button" data-i18n="startGame">
+              🎮 משחק: מה יותר ארוך?
+            </button>
+            <div
+              class="sort-toggle"
+              role="group"
+              aria-label="מיון"
+              data-i18n-attr="aria-label:sort"
+            >
+              <button type="button" data-sort="desc" aria-pressed="true" data-i18n="longestFirst">
+                הכי ארוך קודם
+              </button>
+              <button type="button" data-sort="asc" aria-pressed="false" data-i18n="shortestFirst">
+                הכי קצר קודם
+              </button>
             </div>
-            <label class="visually-hidden" for="street-filter">חיפוש רחוב</label>
-            <input id="street-filter" type="search" placeholder="חיפוש רחוב…" />
+            <label class="visually-hidden" for="street-filter" data-i18n="searchStreet">
+              חיפוש רחוב
+            </label>
+            <input
+              id="street-filter"
+              type="search"
+              placeholder="חיפוש רחוב…"
+              data-i18n-attr="placeholder:searchStreetPlaceholder"
+            />
           </div>
         </div>
         <ol class="street-list" id="street-list"></ol>
+        <section
+          class="game-panel"
+          id="game-panel"
+          aria-label="משחק: מה יותר ארוך?"
+          data-i18n-attr="aria-label:gameLabel"
+          hidden
+        ></section>
         <div class="debug-panel" id="debug-panel" hidden></div>
       </aside>
     </main>
 
     <footer class="app-footer">
       <details class="how">
-        <summary>איך אנחנו מודדים?</summary>
+        <summary data-i18n="howTitle">איך אנחנו מודדים?</summary>
         <div class="how-body">
-          <p>
+          <p data-i18n="howBody1">
             הנתונים מגיעים מ־OpenStreetMap, מפה שמתנדבים מציירים. רחוב הוא כל הקטעים בעיר שיש להם
             אותו שם. כשלשדרה יש שני מסלולים נפרדים, סופרים אותה פעם אחת. חלקים שיוצאים מגבול העיר לא
             נספרים, וכיכרות לא נכנסות לאורך.
           </p>
-          <p>
+          <p data-i18n="howBody2">
             המספרים טובים כמו המפה. לפעמים הם יוצאים בכמה עשרות מטרים יותר או פחות. רחובות קצרים
             מאוד מסומנים בנקודה, כי לפעמים הם רק שארית של מיפוי ולא רחוב אמיתי.
           </p>
         </div>
       </details>
       <span class="attribution">
-        נתונים:
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener"
+        <span data-i18n="dataLabel">נתונים:</span>
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener"
+          data-i18n="osmContributors"
           >© תורמי OpenStreetMap</a
         >
       </span>

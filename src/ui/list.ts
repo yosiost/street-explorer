@@ -1,8 +1,9 @@
 import { searchKey } from '../data/cities';
-import { ORIENTATION_LABELS } from '../geo/orientation';
+import { locale, t } from '../i18n';
 import type { Street } from '../geo/streets';
 import { bdi } from './dom';
 import { formatLength } from './format';
+import { cityName, streetName } from './names';
 import type { State, Store } from './store';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -28,10 +29,10 @@ export function orientationIcon(street: Pick<Street, 'orientation' | 'bearingDeg
 }
 
 export function sortStreets(streets: Street[], dir: State['sortDir']): Street[] {
-  const collator = new Intl.Collator('he');
+  const collator = new Intl.Collator(locale());
   const sign = dir === 'desc' ? -1 : 1;
   return [...streets].sort(
-    (a, b) => sign * (a.lengthM - b.lengthM) || collator.compare(a.name, b.name),
+    (a, b) => sign * (a.lengthM - b.lengthM) || collator.compare(streetName(a), streetName(b)),
   );
 }
 
@@ -59,9 +60,12 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     rows.clear();
     const streets = s.result ? sortStreets(s.result.streets, s.sortDir) : [];
     const q = searchKey(s.filterText);
+    const homeId = s.home && s.home.cityId === s.shownCity?.id ? s.home.streetId : null;
     const items: HTMLLIElement[] = [];
     streets.forEach((street, i) => {
-      if (q && !searchKey(street.name).includes(q)) return;
+      const shown = streetName(street);
+      // The filter finds a street by either of its names.
+      if (q && !searchKey(shown).includes(q) && !searchKey(street.name).includes(q)) return;
       const li = document.createElement('li');
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -74,12 +78,19 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
 
       const name = document.createElement('span');
       name.className = 'name';
-      name.append(bdi(street.name));
+      name.append(bdi(shown));
+      if (street.id === homeId) {
+        const star = document.createElement('span');
+        star.className = 'home-mark';
+        star.textContent = '⭐';
+        star.title = t().ourStreet;
+        name.append(star);
+      }
       if (street.flags.includes('tiny')) {
         const tiny = document.createElement('span');
         tiny.className = 'tiny-mark';
         tiny.textContent = '•';
-        tiny.title = 'קטע קצר מאוד, ייתכן שזו שארית מיפוי ולא רחוב שלם';
+        tiny.title = t().tinyTitle;
         name.append(tiny);
       }
 
@@ -92,7 +103,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
       orient.append(orientationIcon(street));
       const label = document.createElement('span');
       label.className = 'orient-label';
-      label.textContent = ORIENTATION_LABELS[street.orientation];
+      label.textContent = t().orientation[street.orientation];
       orient.append(label);
 
       btn.append(rank, name, len, orient);
@@ -105,9 +116,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     if (s.result && items.length === 0) {
       const li = document.createElement('li');
       li.className = 'empty';
-      li.textContent = s.result.streets.length
-        ? 'אין רחוב בשם הזה'
-        : 'לא מצאנו כאן רחובות עם שם ב־OpenStreetMap. יש מקומות, למשל ביפן, שבהם לרחובות אין שמות.';
+      li.textContent = s.result.streets.length ? t().noStreetByName : t().noNamedStreets;
       list.append(li);
     }
     markSelected(s.selectedStreetId, false);
@@ -131,13 +140,16 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
   function renderHeader(s: State) {
     controls.hidden = !s.result;
     if (!s.result || !s.shownCity) {
-      title.replaceChildren(bdi(s.pickedCity?.name ?? ''));
-      summary.textContent = 'בחרו עיר ולחצו „הצג במפה״';
+      title.replaceChildren(bdi(s.pickedCity ? cityName(s.pickedCity) : ''));
+      summary.textContent = t().pickPrompt;
       return;
     }
     const total = s.result.streets.reduce((sum, x) => sum + x.lengthM, 0);
-    title.replaceChildren(bdi(s.shownCity.name));
-    summary.textContent = `${s.result.streets.length.toLocaleString('he')} רחובות · ${(total / 1000).toFixed(1)} ק״מ בסך הכול`;
+    title.replaceChildren(bdi(cityName(s.shownCity)));
+    summary.textContent = t().summary(
+      s.result.streets.length.toLocaleString(locale()),
+      (total / 1000).toFixed(1),
+    );
     sortButtons.forEach((b) =>
       b.setAttribute('aria-pressed', String(b.dataset.sort === s.sortDir)),
     );
@@ -150,11 +162,15 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     if (
       s.result !== prev.result ||
       s.sortDir !== prev.sortDir ||
-      s.filterText !== prev.filterText
+      s.filterText !== prev.filterText ||
+      s.home !== prev.home ||
+      s.lang !== prev.lang
     ) {
       renderHeader(s);
       renderRows(s);
-      if (s.result !== prev.result) list.scrollTop = 0; // a new city starts at the top
+      if (s.result !== prev.result)
+        list.scrollTop = 0; // a new city starts at the top
+      else if (s.home !== prev.home) markSelected(s.selectedStreetId, false);
     } else if (s.pickedCity !== prev.pickedCity) {
       renderHeader(s);
     }

@@ -14,9 +14,9 @@ Goals:
 - Clicking a street in the list highlights it on the map and zooms to it; clicking a street on the map shows a popup with name, length and orientation.
 - Report orientation as one of: North–South, East–West, NE–SW, NW–SE, Winding, or Branched.
 
-Non-goals for v1: routing, house numbers, offline-first mobile app, user accounts, any backend server, an English UI.
+Non-goals for v1: routing, house numbers, offline-first mobile app, user accounts, any backend server.
 
-UI language: Hebrew, right-to-left. In Israeli cities street names come from `name:he`, falling back to `name`; elsewhere from the local `name` (see step 1). Code, comments and identifiers in English.
+UI language: Hebrew, right-to-left, with a switch to English (left-to-right); see milestone 7. In Israeli cities street names come from `name:he`, falling back to `name`; elsewhere from the local `name` (see step 1). Code, comments and identifiers in English.
 
 ## User flow and UI
 
@@ -214,5 +214,17 @@ Acceptance on real data (Kfar Saba):
 - [x] French names keep their apostrophes; no Hebrew geresh in non-Hebrew names.
 - [x] Searching "hoboken" offers הובוקן with its country; it loads with English street names.
 - [x] Tokyo (the metropolis) is shown as too big and can't be picked.
+
+**7. Fun for kids, and English.**
+
+- *Which is longer?* Two streets drawn red and blue, everything else faded. Answer with a big button or by tapping the line; the lengths race as bars at the same speed, the winner gets a 🏆, a right answer gets confetti. Pairs come from streets of at least 60 m without the `tiny` flag, differ by a ratio of 2, then 1.5, 1.3 and 1.15 as the streak grows (`GAME_LEVELS`), and avoid the last six rounds' streets. Our street shows up in about a third of rounds.
+- *Our street.* Set from any popup; stored per browser. Comparisons: whole multiples when longer ("like 8 of our street, end to end"), otherwise "about as long", "about half", "about a quarter", "much shorter". Kid steps are 0.5 m.
+- *Read-aloud.* `speechSynthesis`, offered only when a voice exists for the UI language. Each piece is read by a voice picked explicitly for its script (Hebrew, English, or the default for other scripts), never left to the browser default. Lengths are spelled out ("3.3 קילומטר"), digits without separators.
+- *English.* Every string lives in `src/i18n.ts` (the English table must match the Hebrew one key for key). Switching sets `<html lang dir>`, re-renders all text, and shows streets by `name:en` (most common by length among the street's ways; 416 of 421 in Kfar Saba) and cities by `name:en`. Grouping still uses the Hebrew or local name, so lengths don't change with the language. World search asks Nominatim for `namedetails`, so a result has both names.
+
+- [x] Round 1 pairs differ by at least 2×; a right answer scores, a wrong one says "almost" gently.
+- [x] Setting our street updates the open popup, stars the list row, and survives a reload.
+- [x] Hebrew text is always read by the Hebrew voice, also in the English UI.
+- [x] Switching language mid-game keeps the round and flips the page direction.
 
 Suggested first prompt for Claude Code: "Read DESIGN.md. Implement milestone 1 only, then stop and summarize." Save this doc as `DESIGN.md` in the repo root (export as Markdown).

@@ -1,5 +1,7 @@
 import type { City } from '../data/cities';
 import type { CityResult } from '../geo/pipeline';
+import type { Lang } from '../i18n';
+import type { HomeStreet } from '../kids/units';
 
 export type LoadingStep = 'download' | 'compute';
 
@@ -13,10 +15,14 @@ export type Status =
       /** A city big enough to take minutes. */
       large?: boolean;
     }
-  | { kind: 'error'; message: string }
+  | { kind: 'error'; reason: ErrorReason }
   | { kind: 'ready' };
 
+export type ErrorReason = 'network' | 'network-large' | 'processing' | 'too-big';
+
 export interface State {
+  /** UI language; components re-render their text when it changes. */
+  lang: Lang;
   /** Israeli cities (bundled list or Overpass). */
   cities: City[];
   /** World cities opened before, newest first. */
@@ -32,6 +38,12 @@ export interface State {
   selectedStreetId: string | null;
   sortDir: 'desc' | 'asc';
   filterText: string;
+  /** "Our street", the yardstick for kid comparisons. */
+  home: HomeStreet | null;
+  /** A Hebrew voice exists, so read-aloud buttons are shown. */
+  canSpeak: boolean;
+  /** The "which is longer?" game is open instead of the list. */
+  gameOn: boolean;
 }
 
 type Listener = (state: State, prev: State) => void;

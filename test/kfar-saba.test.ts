@@ -86,4 +86,10 @@ describe('Kfar Saba fixture', () => {
   it('no border slivers under 5 m survive clipping', () => {
     expect(result.streets.filter((s) => s.lengthM < 5)).toEqual([]);
   });
+
+  it('keeps English names for the English UI', () => {
+    const withEn = result.streets.filter((s) => s.altNames?.en);
+    expect(withEn.length / result.streets.length).toBeGreaterThan(0.95);
+    expect(byName.get('הרצל')!.altNames?.en).toBe('Herzl');
+  });
 });

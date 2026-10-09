@@ -12,6 +12,20 @@ export const TILE_MAX_ZOOM = 19;
 
 // Length of one football pitch in meters, used for the kid-friendly comparison.
 export const FOOTBALL_PITCH_M = 105;
+// One step of a 6-year-old, for "about 6,600 steps".
+export const KID_STEP_M = 0.5;
+
+// "Which is longer?" game. Streets shorter than this, or flagged tiny, are never asked
+// about. The required length ratio between the two streets shrinks as the streak grows.
+export const GAME_MIN_STREET_M = 60;
+export const GAME_LEVELS = [
+  { fromStreak: 0, minRatio: 2 },
+  { fromStreak: 2, minRatio: 1.5 },
+  { fromStreak: 4, minRatio: 1.3 },
+  { fromStreak: 7, minRatio: 1.15 },
+];
+// Streets asked about in the last rounds are not asked again right away.
+export const GAME_RECENT_ROUNDS = 6;
 
 // --- Data acquisition ---
 
@@ -61,7 +75,7 @@ export const OVERPASS_LARGE_TIMEOUT_MS = 300_000;
 
 export const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Bump when the geo pipeline changes; invalidates cached processed results only.
-export const PIPELINE_VERSION = 4;
+export const PIPELINE_VERSION = 5;
 
 // --- Street model ---
 

@@ -3,15 +3,6 @@ import type { XY } from './geometry';
 
 export type Orientation = 'N-S' | 'E-W' | 'NE-SW' | 'NW-SE' | 'WINDING' | 'BRANCHED';
 
-export const ORIENTATION_LABELS: Record<Orientation, string> = {
-  'N-S': 'צפון–דרום',
-  'NE-SW': 'צפון-מזרח – דרום-מערב',
-  'E-W': 'מזרח–מערב',
-  'NW-SE': 'צפון-מערב – דרום-מזרח',
-  WINDING: 'מתפתל',
-  BRANCHED: 'מסתעף',
-};
-
 export interface WeightedPoint {
   p: XY; // local meters, x = east, y = north
   w: number;

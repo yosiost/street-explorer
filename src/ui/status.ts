@@ -1,9 +1,17 @@
-import type { LoadingStep, State, Store } from './store';
+import { t } from '../i18n';
+import type { ErrorReason, LoadingStep, State, Store } from './store';
 
-const STEPS: { key: LoadingStep; label: string }[] = [
-  { key: 'download', label: 'מורידים את גבול העיר והרחובות' },
-  { key: 'compute', label: 'מחשבים אורכים וכיוונים' },
+const STEPS: { key: LoadingStep; label: () => string }[] = [
+  { key: 'download', label: () => t().stepDownload },
+  { key: 'compute', label: () => t().stepCompute },
 ];
+
+const ERROR_TEXT: Record<ErrorReason, () => string> = {
+  network: () => t().errorNetwork,
+  'network-large': () => t().errorNetworkLarge,
+  processing: () => t().errorProcessing,
+  'too-big': () => t().errorTooBig,
+};
 
 /** Progress panel with named steps and Cancel; error panel with Retry. */
 export function mountStatus(
@@ -28,7 +36,7 @@ export function mountStatus(
     window.clearInterval(timer);
     timer = undefined;
 
-    if (st.kind === 'error') errorText.textContent = st.message;
+    if (st.kind === 'error') errorText.textContent = ERROR_TEXT[st.reason]();
     if (st.kind !== 'loading') return;
 
     const current = STEPS.findIndex((x) => x.key === st.step);
@@ -36,23 +44,23 @@ export function mountStatus(
       ...STEPS.map((step, i) => {
         const li = document.createElement('li');
         li.className = i < current ? 'done' : i === current ? 'active' : 'pending';
-        li.textContent = step.label;
+        li.textContent = step.label();
         return li;
       }),
     );
     const tick = () => {
       const secs = Math.round((Date.now() - st.startedAt) / 1000);
       note.textContent = st.retrying
-        ? `השרת עמוס, מנסים שוב… (${secs} שניות)`
+        ? t().busyRetrying(secs)
         : st.large
-          ? `${secs} שניות. זו עיר גדולה מאוד, זה יכול לקחת כמה דקות.`
-          : `${secs} שניות. בעיר גדולה זה יכול לקחת עד חצי דקה.`;
+          ? t().waitLarge(secs)
+          : t().waitNormal(secs);
     };
     tick();
     timer = window.setInterval(tick, 1000);
   }
 
   store.subscribe((s, prev) => {
-    if (s.status !== prev.status) render(s);
+    if (s.status !== prev.status || s.lang !== prev.lang) render(s);
   });
 }

@@ -57,7 +57,7 @@ describe('searchWorld', () => {
       return new Response(JSON.stringify(fixture['paris-he']), { status: 200 });
     }) as unknown as typeof fetch;
     const cities = await searchWorld('פריז', { fetchImpl, now: () => 1e12 });
-    expect(new URL(url).searchParams.get('accept-language')).toBe('he');
+    expect(new URL(url).searchParams.get('accept-language')).toBe('he,en');
     expect(new URL(url).searchParams.get('q')).toBe('פריז');
     expect(cities.map((c) => c.id)).toEqual([71525]);
   });

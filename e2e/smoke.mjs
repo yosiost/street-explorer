@@ -58,9 +58,35 @@ const selectedName = (page) =>
 const browser = await chromium.launch();
 const errors = [];
 
+/** A fake speechSynthesis with a Hebrew voice that records what is said. */
+const fakeSpeech = () => {
+  const voices = [
+    { lang: 'en-US', name: 'Samantha', voiceURI: 'Samantha', localService: true, default: true },
+    { lang: 'he-IL', name: 'Carmit', voiceURI: 'Carmit', localService: true },
+  ];
+  window.__spoken = [];
+  window.__voices = [];
+  const synth = {
+    getVoices: () => voices,
+    speak: (u) => {
+      window.__spoken.push(u.text);
+      window.__voices.push(u.voice?.name ?? 'default');
+    },
+    cancel() {},
+    addEventListener() {},
+  };
+  Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
+  window.SpeechSynthesisUtterance = class {
+    constructor(text) {
+      this.text = text;
+    }
+  };
+};
+
 // ---------- Desktop happy path ----------
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'he-IL' });
+  await ctx.addInitScript(fakeSpeech);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await routeOverpass(page);
@@ -223,6 +249,174 @@ const errors = [];
     );
   } else check(false, 'found an empty spot on the map');
 
+  // ----- Our street, kid units, read-aloud -----
+  const openRow = async (name) => {
+    await page.fill('#street-filter', name);
+    await page.click('.street-row >> nth=0');
+    await page.waitForFunction(
+      (n) => document.querySelector('.leaflet-popup .street-popup h3')?.textContent.includes(n),
+      name,
+    );
+    await page.fill('#street-filter', '');
+  };
+  await openRow('ויצמן');
+  let popupText = await page.textContent('.street-popup');
+  check(popupText.includes('👣') && popupText.includes('צעדים של ילד'), 'popup shows kid steps');
+  await page.click('.street-popup .set-home');
+  await page.waitForSelector('.street-popup .set-home[aria-pressed=true]');
+  popupText = await page.textContent('.street-popup');
+  check(popupText.includes('זה הרחוב שלנו!'), 'setting our street updates the open popup');
+  check(
+    await page.$eval('.street-list .selected .name', (e) => e.textContent.includes('⭐')),
+    'our street gets a star in the list',
+  );
+  check(
+    await page.evaluate(() => localStorage.getItem('street-explorer:home')?.includes('ויצמן')),
+    'our street is remembered',
+  );
+  await openRow('סיפן');
+  popupText = await page.textContent('.street-popup');
+  check(
+    /הרבה יותר קצר מהרחוב שלנו|רבע מהרחוב שלנו/.test(popupText),
+    `other streets compare to ours: ${popupText.match(/⭐[^👣]*/u)?.[0]}`,
+  );
+  await page.click('.street-popup .speak');
+  const spoken = await page.evaluate(() => window.__spoken.join(' | '));
+  check(
+    spoken.includes('סיפן') && spoken.includes('מטר') && spoken.includes('הרחוב שלנו'),
+    `read-aloud: ${spoken}`,
+  );
+  await page.keyboard.press('Escape');
+
+  // ----- "Which is longer?" game -----
+  const lengthOf = (name) =>
+    page.evaluate(
+      (n) => window.__app.store.get().result.streets.find((s) => s.name === n).lengthM,
+      name,
+    );
+  const choiceNames = () => page.$$eval('.choice bdi', (els) => els.map((e) => e.textContent));
+  await page.click('#start-game');
+  await page.waitForSelector('#game-panel:not([hidden]) .choice.red');
+  check(await page.isHidden('#street-list'), 'game replaces the list');
+  const [redName, blueName] = await choiceNames();
+  const [redLen, blueLen] = [await lengthOf(redName), await lengthOf(blueName)];
+  check(
+    redName !== blueName && Math.max(redLen, blueLen) / Math.min(redLen, blueLen) >= 2,
+    `round 1 is easy: ${redName} ${Math.round(redLen)} m vs ${blueName} ${Math.round(blueLen)} m`,
+  );
+  check(
+    (await page.evaluate(() => window.__spoken.at(-1))) !== undefined &&
+      (await page.evaluate(() => window.__spoken.join(' ').includes('מה יותר ארוך'))),
+    'the question is read aloud',
+  );
+  await shot(page, '11-game-question');
+  // Answer right with the button.
+  await page.click(redLen > blueLen ? '.choice.red' : '.choice.blue');
+  await page.waitForFunction(
+    () => document.querySelector('.verdict').textContent.length > 0,
+    null,
+    {
+      timeout: 5000,
+    },
+  );
+  check((await page.textContent('.verdict')).startsWith('נכון'), 'right answer: נכון!');
+  check((await page.textContent('.game-score')).includes('1'), 'score goes up');
+  check(!!(await page.$('.map-emoji.trophy')), 'trophy on the winning street');
+  check(
+    await page.$$eval('.race-length', (els) => els.every((e) => e.textContent.length > 0)),
+    'race shows both lengths',
+  );
+  await page.waitForTimeout(400);
+  await shot(page, '12-game-answer');
+
+  // Round 2: answer wrong by tapping the shorter street's line on the map.
+  await page.click('.game-next');
+  await page.waitForSelector('.choice.red:not([disabled])');
+  const [r2, b2] = await choiceNames();
+  const shorterSide = (await lengthOf(r2)) < (await lengthOf(b2)) ? 'red' : 'blue';
+  const pt2 = await page.evaluate((side) => {
+    const { mapView } = window.__app;
+    const p = mapView.pointOnStreet(mapView.pair[side]);
+    const r = document.querySelector('#map').getBoundingClientRect();
+    return { x: r.left + p.x, y: r.top + p.y };
+  }, shorterSide);
+  await page.mouse.click(pt2.x, pt2.y);
+  await page.waitForFunction(
+    () => document.querySelector('.verdict').textContent.length > 0,
+    null,
+    {
+      timeout: 5000,
+    },
+  );
+  check(
+    (await page.textContent('.verdict')).startsWith('כמעט'),
+    'tapping the map line answers; wrong answer gets a gentle כמעט',
+  );
+  check((await page.textContent('.game-round')).includes('2'), 'round counter');
+  await page.click('.game-exit');
+  check(
+    (await page.isVisible('#street-list')) && !(await page.$('.map-emoji.trophy')),
+    'exiting the game brings the list back and clears the map',
+  );
+
+  // ----- Language switch -----
+  check(
+    await page.evaluate(() =>
+      window.__voices.every(
+        (v, i) => v === 'Carmit' || !/[\u0590-\u05FF]/.test(window.__spoken[i]),
+      ),
+    ),
+    'Hebrew text is always read by the Hebrew voice',
+  );
+  await page.click('#lang-toggle');
+  const html = await page.evaluate(() => ({
+    dir: document.documentElement.dir,
+    lang: document.documentElement.lang,
+    title: document.querySelector('.app-title').textContent,
+    toggle: document.querySelector('#lang-toggle').textContent.trim(),
+  }));
+  check(
+    html.dir === 'ltr' &&
+      html.lang === 'en' &&
+      html.title === 'Street Explorers' &&
+      html.toggle === 'עברית',
+    `switching to English flips the page: ${JSON.stringify(html)}`,
+  );
+  const enNames = await rowNames(page);
+  check(
+    (await page.textContent('#list-summary')).includes('streets') &&
+      enNames.filter((n) => /[A-Za-z]/.test(n)).length > enNames.length * 0.9,
+    `street names in English: ${enNames.slice(0, 3).join(', ')}`,
+  );
+  check((await page.inputValue('#city-input')) === 'Kfar Saba', 'city name in English');
+  await page.click('.street-row >> nth=0');
+  await page.waitForSelector('.leaflet-popup .street-popup');
+  const enPopup = await page.textContent('.street-popup');
+  check(enPopup.includes('Length') && enPopup.includes('kid steps'), 'popup in English');
+  await page.evaluate(() => {
+    window.__spoken = [];
+    window.__voices = [];
+  });
+  await page.click('.street-popup .speak');
+  const enSpoken = await page.evaluate(() => ({ text: window.__spoken, voices: window.__voices }));
+  check(
+    enSpoken.voices[1] === 'Samantha' && enSpoken.text[1].includes('kilometers long'),
+    `English read-aloud uses the English voice: ${enSpoken.text.join(' | ')}`,
+  );
+  await page.keyboard.press('Escape');
+  await shot(page, '13-english');
+  await page.click('#start-game');
+  await page.waitForSelector('.choice.red');
+  check((await page.textContent('.game-title')) === 'Which is longer?', 'game in English');
+  await shot(page, '14-english-game');
+  await page.click('#lang-toggle');
+  check(
+    (await page.textContent('.game-title')) === 'מה יותר ארוך?' &&
+      (await page.evaluate(() => document.documentElement.dir)) === 'rtl',
+    'switching back mid-game: Hebrew again',
+  );
+  await page.click('.game-exit');
+
   // Typing the picked city's full name filters by it (it used to show the whole list,
   // so Enter picked the first city in the alphabet).
   await page.click('#city-input');
@@ -370,6 +564,21 @@ const errors = [];
     () => document.documentElement.scrollWidth > window.innerWidth,
   );
   check(!overflow, 'mobile: no horizontal scroll');
+  await page.tap('#start-game');
+  await page.waitForSelector('.choice.red');
+  await page.waitForTimeout(300);
+  const gameOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth,
+  );
+  check(!gameOverflow, 'mobile: game fits the screen');
+  const toggleBox = await (await page.$('#lang-toggle')).boundingBox();
+  const titleBox = await (await page.$('.app-title')).boundingBox();
+  check(
+    Math.abs(toggleBox.y + toggleBox.height / 2 - (titleBox.y + titleBox.height / 2)) < 12,
+    'mobile: language button sits on the title row',
+  );
+  await shot(page, '07b-mobile-game');
+  await page.tap('.game-exit');
   await page.tap('.street-row >> nth=0');
   await page.waitForSelector('.leaflet-popup .street-popup');
   check((await selectedName(page)) === 'ויצמן', 'mobile: tapping a row selects it');

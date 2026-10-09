@@ -4,12 +4,20 @@ import { cacheGet, cacheKeys, cacheSet } from './data/cache';
 import { citySize, isIsraeli, type City } from './data/cities';
 import { loadCityList, loadCityRaw, type CityRaw } from './data/loader';
 import { OverpassError } from './data/overpass';
+import { loadHome, saveHome } from './data/home';
 import { loadRecent, rememberRecent } from './data/recent';
 import type { CityResult } from './geo/pipeline';
+import type { Street } from './geo/streets';
+import { applyStaticText, getLang, setLang } from './i18n';
+import { spokenStreet } from './kids/units';
 import { mountDebug } from './ui/debug';
+import { canPlay, mountGame } from './ui/game';
 import { mountList } from './ui/list';
 import { MapView } from './ui/map';
 import { mountPicker } from './ui/picker';
+import { popupContent } from './ui/popup';
+import { streetName } from './ui/names';
+import { canSpeak, speak, whenVoicesReady } from './ui/speech';
 import { mountStatus } from './ui/status';
 import { createStore, type LoadingStep, type State } from './ui/store';
 import type { WorkerRequest, WorkerResponse } from './worker';
@@ -20,7 +28,10 @@ const $ = <T extends HTMLElement>(sel: string) => {
   return el;
 };
 
+applyStaticText();
+
 const store = createStore({
+  lang: getLang(),
   cities: [],
   recentCities: loadRecent(),
   pickedCity: null,
@@ -31,6 +42,9 @@ const store = createStore({
   selectedStreetId: null,
   sortDir: 'desc',
   filterText: '',
+  home: loadHome(),
+  canSpeak: false,
+  gameOn: false,
 });
 
 // --- Selection: list and map both write selectedStreetId; the map follows it. ---
@@ -40,6 +54,58 @@ let focusOnSelect = false;
 const mapView = new MapView($('#map'), {
   onStreetClick: (id) => store.set({ selectedStreetId: id }),
   onEmptyClick: () => store.set({ selectedStreetId: null }),
+  onPairClick: (id) => game.answer(id),
+  renderPopup: (street) =>
+    popupContent(street, {
+      home: store.get().home,
+      canSpeak: store.get().canSpeak,
+      onToggleHome: toggleHome,
+      onSpeak: (s) => speak(spokenStreet({ ...s, name: streetName(s) }, store.get().home)),
+    }),
+});
+
+// --- "Our street" and read-aloud ---
+
+function toggleHome(street: Street) {
+  const { home, shownCity } = store.get();
+  if (!shownCity) return;
+  const next =
+    home?.streetId === street.id && home.cityId === shownCity.id
+      ? null
+      : {
+          cityId: shownCity.id,
+          streetId: street.id,
+          name: streetName(street),
+          lengthM: street.lengthM,
+        };
+  saveHome(next);
+  store.set({ home: next });
+}
+
+store.subscribe((s, prev) => {
+  if (s.home !== prev.home || s.result !== prev.result || s.shownCity !== prev.shownCity) {
+    const here = s.home && s.shownCity && s.home.cityId === s.shownCity.id;
+    mapView.setHome(here ? s.home!.streetId : null);
+  }
+  if (s.home !== prev.home || s.canSpeak !== prev.canSpeak || s.lang !== prev.lang) {
+    mapView.refreshPopup();
+  }
+});
+
+void whenVoicesReady().then(() => store.set({ canSpeak: canSpeak() }));
+
+// --- Language: עברית / English ---
+
+const langToggle = $<HTMLButtonElement>('#lang-toggle');
+const renderLangToggle = () => {
+  // The button is labelled in the language it switches to.
+  langToggle.querySelector('.lang-label')!.setAttribute('lang', getLang() === 'he' ? 'en' : 'he');
+};
+renderLangToggle();
+langToggle.addEventListener('click', () => {
+  setLang(getLang() === 'he' ? 'en' : 'he');
+  renderLangToggle();
+  store.set({ lang: getLang(), canSpeak: canSpeak() });
 });
 
 store.subscribe((s, prev) => {
@@ -58,9 +124,21 @@ mountList($('.list-pane'), store, (id) => {
   store.set({ selectedStreetId: id });
 });
 
-// --- Loading a city ---
+// --- "Which is longer?" game: replaces the list while it runs. ---
 
-const TOO_BIG_MESSAGE = 'העיר הזו גדולה מדי בשביל האפליקציה. חפשו רובע או שכונה שלה.';
+const game = mountGame($('#game-panel'), store, mapView);
+const startGame = $<HTMLButtonElement>('#start-game');
+startGame.addEventListener('click', () => store.set({ gameOn: true, selectedStreetId: null }));
+store.subscribe((s, prev) => {
+  if (s.result !== prev.result) startGame.disabled = !s.result || !canPlay(s.result.streets);
+  if (s.gameOn !== prev.gameOn) {
+    $('.list-pane').classList.toggle('game-on', s.gameOn);
+    $('#game-panel').hidden = !s.gameOn;
+    if (!s.gameOn) startGame.focus({ preventScroll: true });
+  }
+});
+
+// --- Loading a city ---
 
 interface Job {
   abort: AbortController;
@@ -112,7 +190,7 @@ async function loadCity(city: City) {
   if (size === 'too-big') {
     // The picker does not offer these; this guards other ways in.
     job = null;
-    store.set({ status: { kind: 'error', message: TOO_BIG_MESSAGE } });
+    store.set({ status: { kind: 'error', reason: 'too-big' } });
     return;
   }
   const large = size === 'large';
@@ -166,11 +244,7 @@ async function loadCity(city: City) {
     store.set({
       status: {
         kind: 'error',
-        message: network
-          ? large
-            ? 'לא הצלחנו להוריד את העיר. היא גדולה מאוד, ואולי השרתים עמוסים. נסו שוב, או חפשו רובע או שכונה שלה.'
-            : 'לא הצלחנו להוריד את הנתונים מ־OpenStreetMap. ייתכן שהשרתים עמוסים כרגע. נסו שוב בעוד דקה.'
-          : 'משהו השתבש בעיבוד הנתונים של העיר הזו.',
+        reason: network ? (large ? 'network-large' : 'network') : 'processing',
       },
     });
   }

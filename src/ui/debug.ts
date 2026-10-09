@@ -7,7 +7,7 @@ export function mountDebug(panel: HTMLElement, store: Store) {
     const s = store.get();
     panel.replaceChildren();
     if (!s.result) {
-      panel.textContent = 'debug: אין נתונים עדיין';
+      panel.textContent = 'debug: no data yet';
       return;
     }
     const { stats } = s.result;
@@ -19,7 +19,7 @@ export function mountDebug(panel: HTMLElement, store: Store) {
     const street = s.result.streets.find((x) => x.id === s.selectedStreetId);
     if (!street) {
       const p = document.createElement('p');
-      p.textContent = 'בחרו רחוב כדי לראות פרטים.';
+      p.textContent = 'Pick a street to see its details.';
       panel.append(p);
       return;
     }

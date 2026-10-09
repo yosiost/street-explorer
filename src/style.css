@@ -6,6 +6,12 @@
   --border: #e2e2dc;
   --accent: #e8590c;
   --accent-soft: #fff1e8;
+  --red: #e03131;
+  --red-soft: #ffe3e3;
+  --blue: #1c7ed6;
+  --blue-soft: #e7f5ff;
+  --gold: #f2b705;
+  --good: #2f9e44;
   --street: #5b6b7f;
   --gutter: 16px;
   --radius: 8px;
@@ -198,6 +204,50 @@ button {
   font-size: 0.875rem;
   color: var(--muted);
   white-space: nowrap;
+}
+
+/* Language switch: a pill at the end of the header, labelled in the other language. */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  margin-inline-start: auto;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.lang-toggle:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.lang-toggle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lang-toggle .globe {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 
 /* ---------- City view: list on the right (RTL start), map beside it ---------- */
@@ -429,6 +479,10 @@ button.secondary {
   font-weight: 600;
 }
 
+.home-mark {
+  margin-inline-start: 4px;
+}
+
 .tiny-mark {
   margin-inline-start: 4px;
   color: var(--accent);
@@ -526,7 +580,327 @@ button.secondary {
 
 .street-popup .fun {
   margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
   font-weight: 600;
+}
+
+.street-popup .fun li + li {
+  margin-top: 2px;
+}
+
+.popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.popup-actions button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.popup-actions .set-home[aria-pressed='true'] {
+  border-color: var(--gold);
+  background: #fff8db;
+}
+
+/* Emoji markers on the map (our street's star, the game's trophy). */
+.map-emoji {
+  font-size: 24px;
+  line-height: 28px;
+  text-align: center;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+}
+
+.map-emoji.trophy {
+  font-size: 32px;
+  line-height: 36px;
+}
+
+.map-emoji.trophy span {
+  display: inline-block;
+  animation: pop 0.5s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.2);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- Game: "which is longer?" ---------- */
+
+.game-button {
+  height: 44px;
+  border-radius: var(--radius);
+  border: 0;
+  background: linear-gradient(90deg, var(--red), var(--blue));
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.game-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.list-pane.game-on .list-header,
+.list-pane.game-on .street-list,
+.list-pane.game-on .debug-panel {
+  display: none;
+}
+
+.game-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px var(--gutter) 20px;
+  overflow-y: auto;
+}
+
+.game-panel[hidden] {
+  display: none;
+}
+
+.game-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+.game-score {
+  font-size: 1.25rem;
+}
+
+.game-round {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.game-voice {
+  margin-inline-start: auto;
+}
+
+.game-voice,
+.game-exit {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.game-voice[hidden] + .game-exit {
+  margin-inline-start: auto;
+}
+
+.game-title {
+  margin: 4px 0 0;
+  font-size: 1.75rem;
+  text-align: center;
+}
+
+.game-hint {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.9375rem;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 16px;
+  border-radius: 14px;
+  border: 3px solid;
+  font: inherit;
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.choice:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.choice.red {
+  border-color: var(--red);
+  background: var(--red-soft);
+  color: #a51111;
+}
+
+.choice.blue {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: #0b5394;
+}
+
+.choice .swatch {
+  flex: none;
+  width: 28px;
+  height: 8px;
+  border-radius: 4px;
+  background: currentColor;
+}
+
+.choice.red .swatch {
+  background: var(--red);
+}
+
+.choice.blue .swatch {
+  background: var(--blue);
+}
+
+.choice:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.choice.right {
+  opacity: 1;
+  box-shadow: 0 0 0 4px var(--good);
+}
+
+.choice.wrong {
+  opacity: 1;
+  box-shadow: 0 0 0 4px var(--muted);
+}
+
+.race {
+  display: grid;
+  gap: 8px;
+}
+
+.race[hidden] {
+  display: none;
+}
+
+.race-row {
+  display: grid;
+  grid-template-columns: minmax(0, 7em) 1fr 4.5em;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.race-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.race-track {
+  height: 18px;
+  border-radius: 9px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.race-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 9px;
+}
+
+.race-length {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.verdict {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.praise {
+  margin: 0;
+  font-size: 1.125rem;
+  text-align: center;
+}
+
+.praise:empty {
+  display: none;
+}
+
+.game-next {
+  align-self: center;
+  min-width: 160px;
+  height: 52px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.game-next[hidden] {
+  display: none;
+}
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti i {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translate(var(--drift), 105vh) rotate(var(--spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-emoji.trophy span,
+  .choice {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* ---------- Footer ---------- */
@@ -572,6 +946,21 @@ button.secondary {
     width: 100%;
   }
 
+  /* On the title row, in the corner. */
+  .lang-toggle {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 12px;
+    height: 30px;
+    padding: 0 10px 0 8px;
+    font-size: 0.8125rem;
+  }
+
+  .lang-toggle .globe {
+    width: 15px;
+    height: 15px;
+  }
+
   .picker {
     width: 100%;
   }
@@ -599,6 +988,20 @@ button.secondary {
 
   .list-controls {
     flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .game-button {
+    flex-basis: 100%;
+  }
+
+  .choice {
+    min-height: 56px;
+    font-size: 1.1875rem;
+  }
+
+  .game-title {
+    font-size: 1.5rem;
   }
 
   .sort-toggle {

@@ -1,4 +1,5 @@
 import { NOMINATIM_MIN_INTERVAL_MS, NOMINATIM_SEARCH_URL, WORLD_SEARCH_LIMIT } from '../config';
+import { getLang } from '../i18n';
 import type { City } from './cities';
 
 /** The fields of a Nominatim `format=jsonv2&addressdetails=1` result that we use. */
@@ -12,6 +13,8 @@ export interface NominatimPlace {
   /** [south, north, west, east] as strings. */
   boundingbox?: string[];
   address?: Record<string, string>;
+  /** With `namedetails=1`: name, name:he, name:en, … */
+  namedetails?: Record<string, string> | null;
 }
 
 export class SearchError extends Error {
@@ -44,7 +47,10 @@ export function parseNominatim(results: NominatimPlace[]): City[] {
   for (const r of results) {
     if (r.osm_type !== 'relation') continue;
     if (r.category && r.category !== 'boundary' && r.category !== 'place') continue;
-    const name = (r.name || r.display_name.split(',')[0] || '').trim();
+    const nd = r.namedetails ?? {};
+    const shown = (r.name || r.display_name.split(',')[0] || '').trim();
+    const name = (nd['name:he'] ?? nd.name ?? shown).trim();
+    const nameEn = (nd['name:en'] ?? nd.int_name ?? nd.name ?? shown).trim();
     if (!name) continue;
     const bbox = r.boundingbox?.map(Number);
     const key = `${name}|${bbox?.map((v) => v.toFixed(3)).join(',')}`;
@@ -57,6 +63,7 @@ export function parseNominatim(results: NominatimPlace[]): City[] {
     cities.push({
       id: r.osm_id,
       name,
+      ...(nameEn && nameEn !== name ? { nameEn } : {}),
       regional: false,
       country: a.country_code?.toLowerCase(),
       context: context || undefined,
@@ -69,8 +76,8 @@ export function parseNominatim(results: NominatimPlace[]): City[] {
 let lastRequestAt = 0;
 
 /**
- * Searches the whole world for a place by name. Names come back in Hebrew when OSM has a
- * Hebrew name, otherwise in the local language. Requests are spaced at least a second
+ * Searches the whole world for a place by name. Each result keeps a Hebrew-or-local name
+ * and an English-or-local name; region and country come in the UI language. Requests are spaced at least a second
  * apart, as the Nominatim usage policy asks.
  */
 export async function searchWorld(
@@ -88,7 +95,9 @@ export async function searchWorld(
     q: query.trim(),
     format: 'jsonv2',
     addressdetails: '1',
-    'accept-language': 'he',
+    namedetails: '1',
+    // The region and country come back in this language.
+    'accept-language': getLang() === 'he' ? 'he,en' : 'en',
     // Ask for more than we show: nodes and duplicate areas get filtered out.
     limit: String(WORLD_SEARCH_LIMIT * 2),
   }).toString();

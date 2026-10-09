@@ -1,6 +1,8 @@
 import { citySize, matchesCity, searchKey, type City } from '../data/cities';
 import { searchWorld, SearchError } from '../data/search';
+import { t } from '../i18n';
 import { bdi } from './dom';
+import { cityName } from './names';
 import type { Store } from './store';
 
 type Option =
@@ -9,8 +11,8 @@ type Option =
   | { kind: 'note'; text: string; heading?: boolean };
 
 const SIZE_NOTE = {
-  large: 'עיר גדולה מאוד, ההורדה תיקח כמה דקות',
-  'too-big': 'גדולה מדי. חפשו רובע או שכונה שלה',
+  large: () => t().sizeLarge,
+  'too-big': () => t().sizeTooBig,
 } as const;
 
 /**
@@ -24,6 +26,10 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
   const button = root.querySelector<HTMLButtonElement>('#map-it')!;
   const regionalToggle = root.querySelector<HTMLInputElement>('#show-regional')!;
 
+  const pickedName = () => {
+    const city = store.get().pickedCity;
+    return city ? cityName(city) : '';
+  };
   let options: Option[] = [];
   let active = -1;
   // The last world search; its results show while the input still says the same thing.
@@ -54,15 +60,15 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
     const q = query.trim();
     if (!searchKey(q)) return out;
     if (world && world.query === q) {
-      out.push({ kind: 'note', text: 'בעולם', heading: true });
-      if (world.status === 'loading') out.push({ kind: 'note', text: 'מחפשים…' });
+      out.push({ kind: 'note', text: t().worldHeading, heading: true });
+      if (world.status === 'loading') out.push({ kind: 'note', text: t().searching });
       else if (world.status === 'error') {
-        out.push({ kind: 'note', text: 'החיפוש לא הצליח. נסו שוב בעוד רגע.' });
+        out.push({ kind: 'note', text: t().searchFailed });
         out.push({ kind: 'search', query: q });
       } else {
         const shown = new Set(out.map((o) => (o.kind === 'city' ? o.city.id : -1)));
         const found = world.cities.filter((c) => !shown.has(c.id));
-        if (!found.length) out.push({ kind: 'note', text: 'לא נמצא מקום בשם הזה' });
+        if (!found.length) out.push({ kind: 'note', text: t().noPlace });
         for (const city of found) out.push({ kind: 'city', city });
       }
     } else {
@@ -86,10 +92,10 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
 
     if (o.kind === 'search') {
       li.className += ' search';
-      li.textContent = `חיפוש ״${o.query}״ בכל העולם`;
+      li.textContent = t().searchWorld(o.query);
     } else {
       const { city } = o;
-      li.append(bdi(city.name));
+      li.append(bdi(cityName(city)));
       if (city.context) {
         const ctx = document.createElement('span');
         ctx.className = 'context';
@@ -100,7 +106,7 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
       if (size !== 'normal') {
         const note = document.createElement('span');
         note.className = `size-note ${size}`;
-        note.textContent = SIZE_NOTE[size];
+        note.textContent = SIZE_NOTE[size]();
         li.append(note);
       }
       if (size === 'too-big') li.setAttribute('aria-disabled', 'true');
@@ -119,7 +125,7 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
     if (options.length === 0) {
       const li = document.createElement('li');
       li.className = 'empty';
-      li.textContent = 'לא נמצאה עיר';
+      li.textContent = t().noCity;
       listbox.append(li);
     }
     input.setAttribute(
@@ -134,7 +140,7 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
   }
 
   function open() {
-    query = input.value === store.get().pickedCity?.name ? '' : input.value;
+    query = input.value === pickedName() ? '' : input.value;
     active = -1;
     render();
     show();
@@ -152,7 +158,7 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
 
   function choose(city: City) {
     store.set({ pickedCity: city });
-    input.value = city.name;
+    input.value = cityName(city);
     close();
   }
 
@@ -207,7 +213,7 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
   input.addEventListener('blur', () => {
     close();
     // Leaving the field without choosing restores the picked city's name.
-    input.value = store.get().pickedCity?.name ?? '';
+    input.value = pickedName();
   });
   input.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown') {
@@ -239,9 +245,11 @@ export function mountPicker(root: HTMLElement, store: Store, onMapIt: (city: Cit
   });
 
   store.subscribe((s, prev) => {
-    if (s.pickedCity !== prev.pickedCity && document.activeElement !== input) {
-      input.value = s.pickedCity?.name ?? '';
+    const langChanged = s.lang !== prev.lang;
+    if ((s.pickedCity !== prev.pickedCity || langChanged) && document.activeElement !== input) {
+      input.value = pickedName();
     }
+    if (langChanged && isOpen()) render();
     const loading = s.status.kind === 'loading';
     input.disabled = s.cities.length === 0;
     button.disabled = !s.pickedCity || loading;
