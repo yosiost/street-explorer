@@ -1,0 +1,514 @@
+[
+  { "id": 1246731, "name": "נס ציונה", "regional": false, "nameEn": "Nes Ziona" },
+  { "id": 1246791, "name": "רחובות", "regional": false, "nameEn": "Rehovot" },
+  { "id": 1375242, "name": "מג'דל א-שמס", "regional": false, "nameEn": "Majdal Shams" },
+  { "id": 1375243, "name": "בוקעאתא", "regional": false, "nameEn": "Buq'atha" },
+  { "id": 1375244, "name": "מסעדה", "regional": false, "nameEn": "Mas'ade" },
+  { "id": 1375245, "name": "עין קנייא", "regional": false, "nameEn": "Ein Qiniyye" },
+  { "id": 1376758, "name": "מצפה רמון", "regional": false, "nameEn": "Mizpe Ramon" },
+  { "id": 1376764, "name": "ירוחם", "regional": false, "nameEn": "Yeruham" },
+  { "id": 1376773, "name": "נאות חובב", "regional": false, "nameEn": "Neot Hovav" },
+  { "id": 1376782, "name": "אשקלון", "regional": false, "nameEn": "Ashkelon" },
+  {
+    "id": 1376786,
+    "name": "מועצה אזורית רמת נגב",
+    "regional": true,
+    "nameEn": "Ramat Negev Regional Council"
+  },
+  {
+    "id": 1376788,
+    "name": "מועצה אזורית מרחבים",
+    "regional": true,
+    "nameEn": "Merhavim Regional Council"
+  },
+  {
+    "id": 1376824,
+    "name": "מועצה אזורית בני שמעון",
+    "regional": true,
+    "nameEn": "Bnei Shimon Regional Council"
+  },
+  { "id": 1376825, "name": "עומר", "regional": false, "nameEn": "Omer" },
+  { "id": 1376826, "name": "דימונה", "regional": false, "nameEn": "Dimona" },
+  { "id": 1376827, "name": "תל שבע", "regional": false, "nameEn": "Tal as-Sabi" },
+  { "id": 1376828, "name": "מיתר", "regional": false, "nameEn": "Meitar" },
+  { "id": 1376829, "name": "חורה", "regional": false, "nameEn": "Hora" },
+  {
+    "id": 1376830,
+    "name": "מועצה אזורית נווה מדבר",
+    "regional": true,
+    "nameEn": "Neve Midbar Regional Council"
+  },
+  { "id": 1376910, "name": "ערד", "regional": false, "nameEn": "Arad" },
+  { "id": 1376911, "name": "כסייפה", "regional": false, "nameEn": "Kuseife" },
+  {
+    "id": 1376912,
+    "name": "מועצה אזורית תמר",
+    "regional": true,
+    "nameEn": "Tamar Regional Council"
+  },
+  {
+    "id": 1376929,
+    "name": "מועצה אזורית הערבה התיכונה",
+    "regional": true,
+    "nameEn": "Arava Tichona Regional Council"
+  },
+  { "id": 1376931, "name": "ערערה בנגב", "regional": false, "nameEn": "Ar'arat an-Naqab" },
+  { "id": 1377264, "name": "באר שבע", "regional": false, "nameEn": "Be’er-Sheva" },
+  { "id": 1377266, "name": "שגב שלום", "regional": false, "nameEn": "Shaqib al-Salam" },
+  { "id": 1377267, "name": "לקיה", "regional": false, "nameEn": "Lakiya" },
+  {
+    "id": 1377268,
+    "name": "מועצה אזורית חבל אילות",
+    "regional": true,
+    "nameEn": "Hevel Eilot Regional Council"
+  },
+  { "id": 1377284, "name": "אילת", "regional": false, "nameEn": "Eilat" },
+  {
+    "id": 1377971,
+    "name": "מועצה אזורית מבואות החרמון",
+    "regional": true,
+    "nameEn": "Mevoot HaHermon Regional Council"
+  },
+  { "id": 1377972, "name": "ע'ג'ר", "regional": false, "nameEn": "Ghajar" },
+  { "id": 1378947, "name": "קרית שמונה", "regional": false, "nameEn": "Kiryat Shmona" },
+  {
+    "id": 1378948,
+    "name": "מועצה אזורית גליל עליון",
+    "regional": true,
+    "nameEn": "Galil Elyon Regional Council"
+  },
+  { "id": 1378949, "name": "מטולה", "regional": false, "nameEn": "Metula" },
+  { "id": 1379102, "name": "אופקים", "regional": false, "nameEn": "Ofakim" },
+  { "id": 1379103, "name": "נתיבות", "regional": false, "nameEn": "Netivot" },
+  { "id": 1379121, "name": "יסוד המעלה", "regional": false, "nameEn": "Yesud HaMaala" },
+  { "id": 1379175, "name": "קצרין", "regional": false, "nameEn": "Katzrin" },
+  {
+    "id": 1379176,
+    "name": "מועצה אזורית גולן",
+    "regional": true,
+    "nameEn": "Golan Regional Council"
+  },
+  { "id": 1379225, "name": "רהט", "regional": false, "nameEn": "Rahat" },
+  { "id": 1379226, "name": "להבים", "regional": false, "nameEn": "Lehavim" },
+  { "id": 1379241, "name": "ראש פינה", "regional": false, "nameEn": "Rosh Pina" },
+  { "id": 1379262, "name": "טובא זנגריה", "regional": false, "nameEn": "Tuba Zangariya" },
+  { "id": 1379335, "name": "צפת", "regional": false, "nameEn": "Safed" },
+  { "id": 1379342, "name": "חצור הגלילית", "regional": false, "nameEn": "Hatzor HaGlilit" },
+  {
+    "id": 1379423,
+    "name": "מועצה אזורית לכיש",
+    "regional": true,
+    "nameEn": "Lachish Regional Council"
+  },
+  {
+    "id": 1379430,
+    "name": "מועצה אזורית מטה יהודה",
+    "regional": true,
+    "nameEn": "Mate Yehuda Regional Council"
+  },
+  { "id": 1379449, "name": "בית שמש", "regional": false, "nameEn": "Beit Shemesh" },
+  {
+    "id": 1379484,
+    "name": "מועצה אזורית שפיר",
+    "regional": true,
+    "nameEn": "Shafir Regional Council"
+  },
+  { "id": 1379485, "name": "קרית גת", "regional": false, "nameEn": "Kiryat Gat" },
+  {
+    "id": 1379486,
+    "name": "מועצה אזורית יואב",
+    "regional": true,
+    "nameEn": "Yoav Regional Council"
+  },
+  { "id": 1380001, "name": "שדרות", "regional": false, "nameEn": "Sderot" },
+  {
+    "id": 1380003,
+    "name": "מועצה אזורית באר טוביה",
+    "regional": true,
+    "nameEn": "Beer Tuvia Regional Council"
+  },
+  {
+    "id": 1380012,
+    "name": "מועצה אזורית גדרות",
+    "regional": true,
+    "nameEn": "Gderot Regional Council"
+  },
+  { "id": 1380013, "name": "אשדוד", "regional": false, "nameEn": "Ashdod" },
+  { "id": 1380014, "name": "גן יבנה", "regional": false, "nameEn": "Gan Yavne" },
+  {
+    "id": 1380015,
+    "name": "מועצה אזורית חבל יבנה",
+    "regional": true,
+    "nameEn": "Hevel Yavne Regional Council"
+  },
+  { "id": 1380016, "name": "גדרה", "regional": false, "nameEn": "Gedera" },
+  { "id": 1380017, "name": "בני עי\"ש", "regional": false, "nameEn": "Bnei Ayish" },
+  { "id": 1380226, "name": "עפולה", "regional": false, "nameEn": "Afula" },
+  {
+    "id": 1380227,
+    "name": "מועצה אזורית בוסתן-אל-מרג'",
+    "regional": true,
+    "nameEn": "Bustan Al Marj Regional Council"
+  },
+  { "id": 1380228, "name": "אום אל-פחם", "regional": false, "nameEn": "Umm al-Fahm" },
+  {
+    "id": 1380229,
+    "name": "מועצה אזורית מגידו",
+    "regional": true,
+    "nameEn": "Megido Regional Council"
+  },
+  { "id": 1380230, "name": "מעלה עירון", "regional": false, "nameEn": "Maale Iron" },
+  {
+    "id": 1380231,
+    "name": "מועצה אזורית עמק הירדן",
+    "regional": true,
+    "nameEn": "Emek HaYarden Regional Council"
+  },
+  {
+    "id": 1380232,
+    "name": "מועצה אזורית גלבוע",
+    "regional": true,
+    "nameEn": "Gilboa Regional Council"
+  },
+  {
+    "id": 1380233,
+    "name": "מועצה אזורית עמק יזרעאל",
+    "regional": true,
+    "nameEn": "Jezreel Valley Regional Council"
+  },
+  { "id": 1380253, "name": "בית שאן", "regional": false, "nameEn": "Beit Shean" },
+  {
+    "id": 1380254,
+    "name": "מועצה אזורית עמק המעיינות",
+    "regional": true,
+    "nameEn": "Emek HaMaayanot Regional Council"
+  },
+  {
+    "id": 1380374,
+    "name": "מועצה אזורית נחל שורק",
+    "regional": true,
+    "nameEn": "Nahal Sorek Regional Council"
+  },
+  { "id": 1380385, "name": "קרית מלאכי", "regional": false, "nameEn": "Kiryat Malachi" },
+  { "id": 1380415, "name": "יבנה", "regional": false, "nameEn": "Yavne" },
+  {
+    "id": 1380425,
+    "name": "מועצה אזורית גן רווה",
+    "regional": true,
+    "nameEn": "Gan Raveh Regional Council"
+  },
+  {
+    "id": 1380426,
+    "name": "מועצה אזורית ברנר",
+    "regional": true,
+    "nameEn": "Brener Regional Council"
+  },
+  {
+    "id": 1381347,
+    "name": "מועצה אזורית גזר",
+    "regional": true,
+    "nameEn": "Gezer Regional Council"
+  },
+  { "id": 1381348, "name": "מבשרת ציון", "regional": false, "nameEn": "Mevaseret Zion" },
+  { "id": 1381349, "name": "מזכרת בתיה", "regional": false, "nameEn": "Mazkeret Batya" },
+  { "id": 1381350, "name": "ירושלים", "regional": false, "nameEn": "Jerusalem" },
+  { "id": 1381394, "name": "קרית עקרון", "regional": false, "nameEn": "Kiryat Ekron" },
+  {
+    "id": 1381425,
+    "name": "מודיעין-מכבים-רעות",
+    "regional": false,
+    "nameEn": "Modiin-Maccabim-Reut"
+  },
+  {
+    "id": 1381426,
+    "name": "מועצה אזורית חבל מודיעין",
+    "regional": true,
+    "nameEn": "Hevel Modiin Regional Council"
+  },
+  { "id": 1381458, "name": "רמלה", "regional": false, "nameEn": "Ramla" },
+  { "id": 1381478, "name": "באר יעקב", "regional": false, "nameEn": "Beer Yaakov" },
+  { "id": 1381532, "name": "לוד", "regional": false, "nameEn": "Lod" },
+  {
+    "id": 1381544,
+    "name": "מועצה אזורית שדות דן",
+    "regional": true,
+    "nameEn": "Sdot Dan Regional Council"
+  },
+  { "id": 1381559, "name": "קרית יערים", "regional": false, "nameEn": "Kiryat Yearim" },
+  { "id": 1381564, "name": "אבו גוש", "regional": false, "nameEn": "Abu Gosh" },
+  { "id": 1382177, "name": "ראשון לציון", "regional": false, "nameEn": "Rishon LeZion" },
+  { "id": 1382242, "name": "בית דגן", "regional": false, "nameEn": "Beit Dagan" },
+  { "id": 1382458, "name": "בת ים", "regional": false, "nameEn": "Bat Yam" },
+  { "id": 1382459, "name": "אזור", "regional": false, "nameEn": "Azor" },
+  { "id": 1382460, "name": "חולון", "regional": false, "nameEn": "Holon" },
+  { "id": 1382464, "name": "אור יהודה", "regional": false, "nameEn": "Or Yehuda" },
+  {
+    "id": 1382465,
+    "name": "מועצה אזורית דרום השרון",
+    "regional": true,
+    "nameEn": "Drom HaSharon Regional Council"
+  },
+  { "id": 1382466, "name": "יהוד מונוסון", "regional": false, "nameEn": "Yehud Monosson" },
+  { "id": 1382493, "name": "רמת גן", "regional": false, "nameEn": "Ramat Gan" },
+  { "id": 1382494, "name": "תל־אביב–יפו", "regional": false, "nameEn": "Tel-Aviv" },
+  { "id": 1382816, "name": "פתח תקווה", "regional": false, "nameEn": "Petah Tikva" },
+  { "id": 1382817, "name": "בני ברק", "regional": false, "nameEn": "Bnei Brak" },
+  { "id": 1382820, "name": "הרצליה", "regional": false, "nameEn": "Herzliya" },
+  { "id": 1382821, "name": "רמת השרון", "regional": false, "nameEn": "Ramat HaSharon" },
+  { "id": 1382837, "name": "גבעת שמואל", "regional": false, "nameEn": "Givat Shmuel" },
+  { "id": 1382894, "name": "קריית אונו", "regional": false, "nameEn": "Kiryat Ono" },
+  { "id": 1382923, "name": "גבעתיים", "regional": false, "nameEn": "Givatayim" },
+  {
+    "id": 1383390,
+    "name": "מועצה אזורית עמק חפר",
+    "regional": true,
+    "nameEn": "Emek Hefer Regional Council"
+  },
+  { "id": 1383391, "name": "נתניה", "regional": false, "nameEn": "Netanya" },
+  { "id": 1383392, "name": "כפר יונה", "regional": false, "nameEn": "Kfar Yona" },
+  { "id": 1383393, "name": "פרדסיה", "regional": false, "nameEn": "Pardesiya" },
+  { "id": 1383629, "name": "הוד השרון", "regional": false, "nameEn": "Hod HaSharon" },
+  { "id": 1383630, "name": "רעננה", "regional": false, "nameEn": "Raanana" },
+  { "id": 1383631, "name": "כפר סבא", "regional": false, "nameEn": "Kfar Saba" },
+  { "id": 1383632, "name": "כפר שמריהו", "regional": false, "nameEn": "Kfar Shmaryahu" },
+  {
+    "id": 1383640,
+    "name": "מועצה אזורית חוף השרון",
+    "regional": true,
+    "nameEn": "Hof HaSharon Regional Council"
+  },
+  {
+    "id": 1383754,
+    "name": "מועצה אזורית גליל תחתון",
+    "regional": true,
+    "nameEn": "Galil Tachton Regional Council"
+  },
+  { "id": 1383755, "name": "כפר כמא", "regional": false, "nameEn": "Kfar Kama" },
+  {
+    "id": 1383756,
+    "name": "שבלי - אום אל-ר'נם",
+    "regional": false,
+    "nameEn": "Shibli - Umm el Ghanam"
+  },
+  { "id": 1383757, "name": "איכסאל", "regional": false, "nameEn": "Iksal" },
+  { "id": 1383758, "name": "מגדל העמק", "regional": false, "nameEn": "Migdal HaEmek" },
+  { "id": 1383759, "name": "יפיע", "regional": false, "nameEn": "Yafia" },
+  { "id": 1383760, "name": "נוף הגליל", "regional": false, "nameEn": "Nof HaGalil" },
+  { "id": 1383761, "name": "דבוריה", "regional": false, "nameEn": "Daburiya" },
+  { "id": 1383762, "name": "כפר תבור", "regional": false, "nameEn": "Kfar Tavor" },
+  { "id": 1383934, "name": "עין מאהל", "regional": false, "nameEn": "Ein Mahil" },
+  { "id": 1383935, "name": "משהד", "regional": false, "nameEn": "Mashhad" },
+  { "id": 1383936, "name": "ריינה", "regional": false, "nameEn": "Reine" },
+  { "id": 1383937, "name": "כפר כנא", "regional": false, "nameEn": "Kafr Kanna" },
+  { "id": 1386835, "name": "עילוט", "regional": false, "nameEn": "Ilut" },
+  { "id": 1386836, "name": "נצרת", "regional": false, "nameEn": "Nazareth" },
+  { "id": 1386837, "name": "בועיינה ניג'ידאת", "regional": false, "nameEn": "Bu'eine Nujeidat" },
+  {
+    "id": 1386838,
+    "name": "מועצה אזורית אל בטוף",
+    "regional": true,
+    "nameEn": "Al Batuf Regional Council"
+  },
+  { "id": 1386839, "name": "ביר אל מכסור", "regional": false, "nameEn": "Bir al-Maksur" },
+  { "id": 1386840, "name": "טורעאן", "regional": false, "nameEn": "Turan" },
+  { "id": 1386841, "name": "כפר מנדא", "regional": false, "nameEn": "Kafr Manda" },
+  { "id": 1386842, "name": "אעבלין", "regional": false, "nameEn": "Ibilin" },
+  {
+    "id": 1386843,
+    "name": "כווכב אבו אל-היג'א",
+    "regional": false,
+    "nameEn": "Kaukab Abu Al Hija"
+  },
+  {
+    "id": 1386844,
+    "name": "מועצה אזורית משגב",
+    "regional": true,
+    "nameEn": "Misgav Regional Council"
+  },
+  { "id": 1386845, "name": "שפרעם", "regional": false, "nameEn": "Shefaram" },
+  { "id": 1386851, "name": "טמרה", "regional": false, "nameEn": "Tamra" },
+  { "id": 1386852, "name": "כאבול", "regional": false, "nameEn": "Kabul" },
+  { "id": 1387228, "name": "יבנאל", "regional": false, "nameEn": "Yavneel" },
+  { "id": 1387273, "name": "טבריה", "regional": false, "nameEn": "Tiberias" },
+  {
+    "id": 1387370,
+    "name": "מועצה אזורית מרום הגליל",
+    "regional": true,
+    "nameEn": "Merom HaGalil Regional Council"
+  },
+  { "id": 1387371, "name": "מגדל", "regional": false, "nameEn": "Migdal" },
+  { "id": 1387400, "name": "מר'אר", "regional": false, "nameEn": "Maghar" },
+  { "id": 1387401, "name": "עילבון", "regional": false, "nameEn": "Ilabun" },
+  {
+    "id": 1387432,
+    "name": "מועצה אזורית מטה אשר",
+    "regional": true,
+    "nameEn": "Mate Asher Regional Council"
+  },
+  { "id": 1387454, "name": "קרית אתא", "regional": false, "nameEn": "Kiryat Ata" },
+  {
+    "id": 1387455,
+    "name": "מועצה אזורית זבולון",
+    "regional": true,
+    "nameEn": "Zvulun Regional Council"
+  },
+  { "id": 1387456, "name": "קרית ביאליק", "regional": false, "nameEn": "Kiryat Bialik" },
+  { "id": 1387888, "name": "חיפה", "regional": false, "nameEn": "Haifa" },
+  { "id": 1387889, "name": "נשר", "regional": false, "nameEn": "Nesher" },
+  { "id": 1387931, "name": "קרית ים", "regional": false, "nameEn": "Kiryat Yam" },
+  { "id": 1387962, "name": "עכו", "regional": false, "nameEn": "Acre" },
+  { "id": 1387964, "name": "קרית מוצקין", "regional": false, "nameEn": "Kiryat Motzkin" },
+  { "id": 1387988, "name": "דיר אל אסד", "regional": false, "nameEn": "Deir al Asad" },
+  { "id": 1387990, "name": "כרמיאל", "regional": false, "nameEn": "Karmiel" },
+  { "id": 1387991, "name": "בענה", "regional": false, "nameEn": "Bi'na" },
+  { "id": 1387992, "name": "מג'ד אל כרום", "regional": false, "nameEn": "Majd el Kurum" },
+  { "id": 1387994, "name": "שעב", "regional": false, "nameEn": "Shaab" },
+  { "id": 1388009, "name": "נחף", "regional": false, "nameEn": "Nahf" },
+  { "id": 1388015, "name": "סג'ור", "regional": false, "nameEn": "Sajur" },
+  { "id": 1388019, "name": "כסרה - סמיע", "regional": false, "nameEn": "Kisra - Sumei" },
+  {
+    "id": 1389557,
+    "name": "מועצה אזורית לב השרון",
+    "regional": true,
+    "nameEn": "Lev HaSharon Regional Council"
+  },
+  { "id": 1389566, "name": "כוכב יאיר", "regional": false, "nameEn": "Kochav Yair" },
+  { "id": 1389567, "name": "טירה", "regional": false, "nameEn": "Tira" },
+  { "id": 1389571, "name": "טייבה", "regional": false, "nameEn": "Taibe" },
+  { "id": 1391621, "name": "יקנעם עילית", "regional": false, "nameEn": "Yokneam Ilit" },
+  { "id": 1391709, "name": "פוריידיס", "regional": false, "nameEn": "Fureidis" },
+  {
+    "id": 1391710,
+    "name": "מועצה אזורית חוף הכרמל",
+    "regional": true,
+    "nameEn": "Hof HaCarmel Regional Council"
+  },
+  { "id": 1391826, "name": "בסמ\"ה", "regional": false, "nameEn": "Basma" },
+  {
+    "id": 1391828,
+    "name": "מועצה אזורית מנשה",
+    "regional": true,
+    "nameEn": "Menashe Regional Council"
+  },
+  { "id": 1391829, "name": "כפר קרע", "regional": false, "nameEn": "Kfar Kara" },
+  { "id": 1391830, "name": "ערערה", "regional": false, "nameEn": "Arara" },
+  { "id": 1392112, "name": "ג'וליס", "regional": false, "nameEn": "Julis" },
+  { "id": 1392113, "name": "ירכא", "regional": false, "nameEn": "Yirka" },
+  { "id": 1392114, "name": "כפר יאסיף", "regional": false, "nameEn": "Kafr Yasif" },
+  { "id": 1392115, "name": "ג'דיידה-מכר", "regional": false, "nameEn": "Judeida-Makr" },
+  { "id": 1392167, "name": "דיר חנא", "regional": false, "nameEn": "Deir Hanna" },
+  { "id": 1392179, "name": "עראבה", "regional": false, "nameEn": "Arraba" },
+  {
+    "id": 1392186,
+    "name": "מועצה אזורית מעלה יוסף",
+    "regional": true,
+    "nameEn": "Maale Yosef Regional Council"
+  },
+  { "id": 1392828, "name": "זכרון יעקב", "regional": false, "nameEn": "Zikhron Yaakov" },
+  {
+    "id": 1392829,
+    "name": "מועצה אזורית אלונה",
+    "regional": true,
+    "nameEn": "Alona Regional Council"
+  },
+  {
+    "id": 1392847,
+    "name": "בנימינה - גבעת עדה",
+    "regional": false,
+    "nameEn": "Binyamina - Givat Ada"
+  },
+  { "id": 1392848, "name": "אור עקיבא", "regional": false, "nameEn": "Or Akiva" },
+  {
+    "id": 1392849,
+    "name": "פרדס חנה - כרכור",
+    "regional": false,
+    "nameEn": "Pardes Hana - Karkur"
+  },
+  { "id": 1392860, "name": "חדרה", "regional": false, "nameEn": "Hadera" },
+  { "id": 1392861, "name": "אליכין", "regional": false, "nameEn": "Elyakhin" },
+  { "id": 1392894, "name": "ג׳סר א-זרקא", "regional": false, "nameEn": "Jisr az-Zarqa" },
+  { "id": 1392964, "name": "ראמה", "regional": false, "nameEn": "Rameh" },
+  { "id": 1392988, "name": "סכנין", "regional": false, "nameEn": "Sakhnin" },
+  { "id": 1393009, "name": "ג'ש", "regional": false, "nameEn": "Jish" },
+  { "id": 1393026, "name": "בית ג'ן", "regional": false, "nameEn": "Bet Jan" },
+  { "id": 1395617, "name": "קדימה - צורן", "regional": false, "nameEn": "Kadima - Zoran" },
+  { "id": 1395618, "name": "קלנסווה", "regional": false, "nameEn": "Kalanswa" },
+  { "id": 1395619, "name": "אבן יהודה", "regional": false, "nameEn": "Even Yehuda" },
+  { "id": 1395620, "name": "תל מונד", "regional": false, "nameEn": "Tel Mond" },
+  { "id": 1398018, "name": "זמר", "regional": false, "nameEn": "Zemer" },
+  { "id": 1398019, "name": "באקה אל-גרבייה", "regional": false, "nameEn": "Baqa al-Gharbiyye" },
+  { "id": 1398023, "name": "חריש", "regional": false, "nameEn": "Harish" },
+  { "id": 1399119, "name": "אבו סנאן", "regional": false, "nameEn": "Abu Snan" },
+  { "id": 1399133, "name": "אלעד", "regional": false, "nameEn": "Elad" },
+  { "id": 1399264, "name": "בסמת טבעון", "regional": false, "nameEn": "Basmat Tabun" },
+  { "id": 1401193, "name": "גני תקווה", "regional": false, "nameEn": "Ganei Tikva" },
+  { "id": 1401781, "name": "ראש העין", "regional": false, "nameEn": "Rosh HaAyin" },
+  { "id": 1401793, "name": "יאנוח - ג'ת", "regional": false, "nameEn": "Yanoah - Jatt" },
+  { "id": 1401800, "name": "קריית טבעון", "regional": false, "nameEn": "Kiryat Tivon" },
+  { "id": 1403089, "name": "טירת הכרמל", "regional": false, "nameEn": "Tirat HaCarmel" },
+  { "id": 1403095, "name": "דלית אל-כרמל", "regional": false, "nameEn": "Daliyat al-Karmel" },
+  { "id": 1403485, "name": "עוספייא", "regional": false, "nameEn": "Isfiya" },
+  { "id": 1404516, "name": "פסוטה", "regional": false, "nameEn": "Fassuta" },
+  { "id": 1404529, "name": "מעלות תרשיחא", "regional": false, "nameEn": "Maalot Tarshiha" },
+  { "id": 1404543, "name": "חורפיש", "regional": false, "nameEn": "Hurfeish" },
+  { "id": 1405256, "name": "ג'לג'וליה", "regional": false, "nameEn": "Jaljulya" },
+  { "id": 1405260, "name": "כפר ברא", "regional": false, "nameEn": "Kafr Bara" },
+  { "id": 1405261, "name": "כפר קאסם", "regional": false, "nameEn": "Kafr Kasim" },
+  { "id": 1406086, "name": "שהם", "regional": false, "nameEn": "Shoham" },
+  { "id": 1406228, "name": "מגדל תפן", "regional": false, "nameEn": "Migdal Tefen" },
+  { "id": 1406229, "name": "כפר ורדים", "regional": false, "nameEn": "Kfar Vradim" },
+  {
+    "id": 1473950,
+    "name": "מועצה אזורית אשכול",
+    "regional": true,
+    "nameEn": "Eshkol Regional Council"
+  },
+  {
+    "id": 1473951,
+    "name": "מועצה אזורית חוף אשקלון",
+    "regional": true,
+    "nameEn": "Hof Ashkelon Regional Council"
+  },
+  {
+    "id": 1473953,
+    "name": "מועצה אזורית שדות נגב",
+    "regional": true,
+    "nameEn": "Sdot Negev Regional Council"
+  },
+  {
+    "id": 1473954,
+    "name": "מועצה אזורית שער הנגב",
+    "regional": true,
+    "nameEn": "Shaar HaNegev Regional Council"
+  },
+  { "id": 1663091, "name": "שלומי", "regional": false, "nameEn": "Shlomi" },
+  { "id": 1932118, "name": "מעיליא", "regional": false, "nameEn": "Miilya" },
+  { "id": 1932154, "name": "מזרעה", "regional": false, "nameEn": "Mazraah" },
+  { "id": 1932164, "name": "נהריה", "regional": false, "nameEn": "Nahariah" },
+  { "id": 1932371, "name": "סביון", "regional": false, "nameEn": "Savyon" },
+  { "id": 1933844, "name": "רמת ישי", "regional": false, "nameEn": "Ramat Yishai" },
+  { "id": 1933845, "name": "זרזיר", "regional": false, "nameEn": "Zarzir" },
+  {
+    "id": 1933846,
+    "name": "כעביה טבאש חג'אג'רה",
+    "regional": false,
+    "nameEn": "Kaabiya Tabash Hajajira"
+  },
+  { "id": 1933868, "name": "פקיעין (בוקייעה)", "regional": false, "nameEn": "Al Buqei`a" },
+  { "id": 1933959, "name": "רכסים", "regional": false, "nameEn": "Rekhasim" },
+  {
+    "id": 3118471,
+    "name": "מועצה אזורית שומרון",
+    "regional": true,
+    "nameEn": "Shomron Regional Council"
+  },
+  {
+    "id": 10052487,
+    "name": "מועצה אזורית אל-קסום",
+    "regional": true,
+    "nameEn": "al-Qasoum Regional Council"
+  },
+  { "id": 10072527, "name": "ג'ת", "regional": false, "nameEn": "Jatt" },
+  { "id": 11993345, "name": "אלפי מנשה", "regional": false, "nameEn": "Alfey Menashe" },
+  { "id": 15979563, "name": "צור הדסה", "regional": false, "nameEn": "Zur Hadassa" }
+]
