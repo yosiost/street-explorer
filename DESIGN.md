@@ -4,7 +4,7 @@ Oct 9, 2026 · @Yosi
 
 ## Overview and goals
 
-Build a single-page web app that lets a user pick a city (from the Israeli list, or anywhere in the world through search), fetches its streets from OpenStreetMap, and shows them on a map plus a list sorted by length. The first audience is a curious 6-year-old in Kfar Saba and his dad, so the answers to "which street is longest / shortest" must be believable, and the UI must be simple enough to use together.
+Build a single-page web app that lets a user pick a city (from the Israeli list, or anywhere in the world through search), fetches its streets from OpenStreetMap, and shows them on a map plus a list sorted by length. The audience is young kids exploring their own city with a parent, so the answers to "which street is longest / shortest" must be believable, and the UI must be simple enough to use together.
 
 Goals:
 

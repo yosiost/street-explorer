@@ -12,7 +12,7 @@ export const TILE_MAX_ZOOM = 19;
 
 // Length of one football pitch in meters, used for the kid-friendly comparison.
 export const FOOTBALL_PITCH_M = 105;
-// One step of a 6-year-old, for "about 6,600 steps".
+// One step of a young kid, for "about 6,600 steps".
 export const KID_STEP_M = 0.5;
 
 // "Which is longer?" game. Streets shorter than this, or flagged tiny, are never asked

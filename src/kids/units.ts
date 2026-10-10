@@ -26,7 +26,7 @@ export function formatSteps(meters: number): string {
 }
 
 /**
- * The street compared with our street, in words a 6-year-old gets: whole multiples when
+ * The street compared with our street, in words a young kid gets: whole multiples when
  * it is longer, "half" or "a quarter" when shorter. Null when it is our street.
  */
 export function compareToHome(meters: number, home: HomeStreet, streetId: string): string | null {
