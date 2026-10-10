@@ -60,6 +60,11 @@ Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
    - **⭐ Our street:** in any street's popup, mark it as "our street". Every other street is
      then compared with it ("like 8 of our street, end to end"), and it is drawn in gold
      with a star. Popups also count kid steps (half a meter each).
+   - **👟 Streets we walked:** after a walk, open the street and press **הלכנו כאן!** It
+     turns green on the map and gets a ✅ in the list. A card above the list shows the
+     progress (streets, km, share of the city) and a sticker collection to fill: first
+     street, 5/10/25/50 streets, 1/5/10 km, our street, the longest and the shortest
+     street, all four directions, 10%/50%/all of the city. Locked stickers show faded.
    - **🔊 Read aloud:** popups and the game can read names and lengths aloud with the
      browser's built-in voices. A Hebrew voice reads Hebrew and an English voice reads
      English, so a Hebrew street name is read in Hebrew even in the English UI.
@@ -68,7 +73,8 @@ Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
    has one), search results and the reading voice. The choice is remembered; `?lang=en`
    in the URL works too. The map tiles keep their local labels.
 
-"our street", recent cities and the language live in the browser (localStorage).
+"Our street", walks, recent cities and the language live in the browser (localStorage), so
+they stay on the device they were made on.
 
 Add `?debug=1` to the URL for the debug panel. For every street it shows raw vs
 deduplicated length, the paired (dual-carriageway) share, flags and links to each OSM way.
@@ -132,6 +138,7 @@ src/
   data/home.ts         "our street" (localStorage)
   kids/units.ts        kid steps, comparisons with our street, read-aloud text
   kids/pair.ts         picking fair "which is longer?" pairs
+  kids/walked.ts       streets we walked: progress and stickers
   i18n.ts              every UI string in Hebrew and English
   geo/boundary.ts      boundary ring assembly, spatial index, line clipping
   geo/streets.ts       naming, grouping, components, dedup, measuring, flags

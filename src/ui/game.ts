@@ -3,6 +3,7 @@ import type { Street } from '../geo/streets';
 import { gameCandidates, minRatioFor, pickPair, type Pair } from '../kids/pair';
 import { t } from '../i18n';
 import { formatRatio, say as sayText, sayName, type SpeechPart } from '../kids/units';
+import { confetti } from './celebrate';
 import { bdi } from './dom';
 import { formatLength } from './format';
 import { streetName } from './names';
@@ -265,24 +266,6 @@ function raceRow(side: Side) {
       window.setTimeout(() => (len.textContent = len.dataset.text ?? ''), ms);
     },
   };
-}
-
-function confetti() {
-  const layer = el('div', 'confetti');
-  layer.setAttribute('aria-hidden', 'true');
-  const colors = ['#e03131', '#1c7ed6', '#f2b705', '#2f9e44', '#e8590c', '#ae3ec9'];
-  for (let i = 0; i < 60; i++) {
-    const bit = el('i');
-    bit.style.left = `${Math.random() * 100}%`;
-    bit.style.background = colors[i % colors.length]!;
-    bit.style.animationDelay = `${Math.random() * 0.4}s`;
-    bit.style.animationDuration = `${1.4 + Math.random() * 1.2}s`;
-    bit.style.setProperty('--drift', `${(Math.random() - 0.5) * 160}px`);
-    bit.style.setProperty('--spin', `${Math.random() * 720}deg`);
-    layer.append(bit);
-  }
-  document.body.append(layer);
-  window.setTimeout(() => layer.remove(), 3_000);
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = '') {

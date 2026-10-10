@@ -1,4 +1,4 @@
-import { t } from '../i18n';
+import { locale, t } from '../i18n';
 import type { Street } from '../geo/streets';
 import { compareToHome, formatSteps, type HomeStreet } from '../kids/units';
 import { bdi } from './dom';
@@ -7,8 +7,11 @@ import { streetName } from './names';
 
 export interface PopupContext {
   home: HomeStreet | null;
+  /** The day we marked this street as walked, or null. */
+  walkedOn: string | null;
   canSpeak: boolean;
   onToggleHome(street: Street): void;
+  onToggleWalked(street: Street): void;
   onSpeak(street: Street): void;
 }
 
@@ -72,9 +75,24 @@ export function popupContent(street: Street, ctx: PopupContext): HTMLElement {
   homeBtn.addEventListener('click', () => ctx.onToggleHome(street));
   actions.append(homeBtn);
 
+  const walkBtn = document.createElement('button');
+  walkBtn.type = 'button';
+  walkBtn.className = 'set-walked';
+  walkBtn.setAttribute('aria-pressed', String(!!ctx.walkedOn));
+  walkBtn.textContent = ctx.walkedOn ? s.walkedDone(formatDay(ctx.walkedOn)) : s.walkedMark;
+  walkBtn.title = ctx.walkedOn ? s.unsetHomeTitle : s.walkedMarkTitle;
+  walkBtn.addEventListener('click', () => ctx.onToggleWalked(street));
+  actions.append(walkBtn);
+
   el.append(h, dl, fun, actions);
   // A button re-renders the popup mid-click; by the time the click reaches the map its
   // target is detached, and Leaflet would take it for a click on empty map.
   el.addEventListener('click', (e) => e.stopPropagation());
   return el;
+}
+
+/** "10.10.2026" / "10/10/2026" for a stored YYYY-MM-DD day. */
+function formatDay(day: string): string {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y!, m! - 1, d!).toLocaleDateString(locale());
 }

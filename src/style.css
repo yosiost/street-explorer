@@ -612,6 +612,160 @@ button.secondary {
   background: #fff8db;
 }
 
+.popup-actions .set-walked {
+  border-color: var(--good);
+  color: #1b6e2c;
+  font-weight: 600;
+}
+
+.popup-actions .set-walked[aria-pressed='true'] {
+  background: #ebfbee;
+}
+
+/* ---------- Streets we walked ---------- */
+
+.walked-mark {
+  margin-inline-start: 4px;
+  font-size: 0.875em;
+}
+
+.walk-progress {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.walk-progress[hidden] {
+  display: none;
+}
+
+.walk-progress summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.walk-progress summary::-webkit-details-marker {
+  display: none;
+}
+
+.walk-title {
+  font-weight: 700;
+}
+
+.sticker-count {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.walk-summary {
+  grid-column: 1 / -1;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.walk-bar {
+  grid-column: 1 / -1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.walk-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--good);
+  transition: width 0.4s ease-out;
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 4px 10px 10px;
+  list-style: none;
+}
+
+.sticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  /* Locked: faded and grey, so the goal is visible but clearly not reached yet. */
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.sticker.earned {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  filter: none;
+  opacity: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.sticker .sticker-emoji {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.sticker-toast {
+  position: fixed;
+  inset-inline: 0;
+  top: 18%;
+  z-index: 2100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: min(320px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 20px 16px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+  text-align: center;
+  cursor: pointer;
+  animation: toast-in 0.35s ease-out;
+}
+
+.sticker-toast .sticker-emoji {
+  font-size: 4rem;
+  line-height: 1.1;
+}
+
+.sticker-toast strong {
+  font-size: 1.375rem;
+  color: var(--accent);
+}
+
+.sticker-toast .sticker-names {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+@keyframes toast-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
 /* Emoji markers on the map (our street's star, the game's trophy). */
 .map-emoji {
   font-size: 24px;
@@ -896,6 +1050,8 @@ button.secondary {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sticker-toast,
+  .walk-fill,
   .map-emoji.trophy span,
   .choice {
     animation: none;

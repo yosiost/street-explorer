@@ -13,7 +13,10 @@ import { loadHome, saveHome } from './data/home';
 import { loadLastCity, loadRecent, rememberRecent, saveLastCity } from './data/recent';
 import type { CityResult } from './geo/pipeline';
 import type { Street } from './geo/streets';
-import { applyStaticText, getLang, setLang } from './i18n';
+import { loadWalked, saveWalked } from './data/walked';
+import { applyStaticText, getLang, setLang, t } from './i18n';
+import { earnedStickers, STICKERS, toggleWalked, walkedIn } from './kids/walked';
+import { celebrate } from './ui/celebrate';
 import { spokenStreet } from './kids/units';
 import { mountDebug } from './ui/debug';
 import { canPlay, mountGame } from './ui/game';
@@ -48,6 +51,7 @@ const store = createStore({
   sortDir: 'desc',
   filterText: '',
   home: loadHome(),
+  walked: loadWalked(),
   canSpeak: false,
   gameOn: false,
 });
@@ -63,8 +67,10 @@ const mapView = new MapView($('#map'), {
   renderPopup: (street) =>
     popupContent(street, {
       home: store.get().home,
+      walkedOn: walkedOnFor(street.id),
       canSpeak: store.get().canSpeak,
       onToggleHome: toggleHome,
+      onToggleWalked: toggleWalkedStreet,
       onSpeak: (s) => speak(spokenStreet({ ...s, name: streetName(s) }, store.get().home)),
     }),
 });
@@ -83,8 +89,52 @@ function toggleHome(street: Street) {
           name: streetName(street),
           lengthM: street.lengthM,
         };
-  saveHome(next);
-  store.set({ home: next });
+  celebrateNewStickers(() => {
+    saveHome(next);
+    store.set({ home: next });
+  });
+}
+
+// --- Streets we walked ---
+
+function walkedOnFor(streetId: string): string | null {
+  const { walked, shownCity } = store.get();
+  return shownCity ? (walkedIn(walked, shownCity.id)[streetId] ?? null) : null;
+}
+
+/** Today as YYYY-MM-DD in local time. */
+function today(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function toggleWalkedStreet(street: Street) {
+  const { walked, shownCity } = store.get();
+  if (!shownCity) return;
+  celebrateNewStickers(() => {
+    const next = toggleWalked(walked, shownCity.id, street.id, today());
+    saveWalked(next);
+    store.set({ walked: next });
+  });
+}
+
+/** Runs a change, then pops up every sticker it earned. */
+function celebrateNewStickers(change: () => void) {
+  const earnedNow = () => {
+    const { result, shownCity, walked, home } = store.get();
+    if (!result || !shownCity) return new Set<string>();
+    const homeId = home && home.cityId === shownCity.id ? home.streetId : null;
+    return earnedStickers(result.streets, walkedIn(walked, shownCity.id), homeId);
+  };
+  const before = earnedNow();
+  change();
+  const after = earnedNow();
+  const fresh = STICKERS.filter((st) => after.has(st.id) && !before.has(st.id));
+  celebrate(
+    fresh.length > 1 ? t().stickersNew(fresh.length) : t().stickerNew,
+    fresh.map((st) => ({ emoji: st.emoji, label: st.label(t()) })),
+  );
 }
 
 store.subscribe((s, prev) => {
@@ -92,7 +142,15 @@ store.subscribe((s, prev) => {
     const here = s.home && s.shownCity && s.home.cityId === s.shownCity.id;
     mapView.setHome(here ? s.home!.streetId : null);
   }
-  if (s.home !== prev.home || s.canSpeak !== prev.canSpeak || s.lang !== prev.lang) {
+  if (s.walked !== prev.walked || s.result !== prev.result || s.shownCity !== prev.shownCity) {
+    mapView.setWalked(new Set(s.shownCity ? Object.keys(walkedIn(s.walked, s.shownCity.id)) : []));
+  }
+  if (
+    s.home !== prev.home ||
+    s.walked !== prev.walked ||
+    s.canSpeak !== prev.canSpeak ||
+    s.lang !== prev.lang
+  ) {
     mapView.refreshPopup();
   }
 });

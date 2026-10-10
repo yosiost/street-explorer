@@ -4,6 +4,7 @@ import type { Street } from '../geo/streets';
 import { bdi } from './dom';
 import { formatLength } from './format';
 import { cityName, streetName } from './names';
+import { STICKERS, earnedStickers, walkProgress, walkedIn } from '../kids/walked';
 import type { State, Store } from './store';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -43,6 +44,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
   const filter = root.querySelector<HTMLInputElement>('#street-filter')!;
   const sortButtons = root.querySelectorAll<HTMLButtonElement>('[data-sort]');
   const controls = root.querySelector<HTMLElement>('.list-controls')!;
+  const walkCard = root.querySelector<HTMLDetailsElement>('#walk-progress')!;
   const debug = new URLSearchParams(location.search).has('debug');
 
   const rows = new Map<string, HTMLLIElement>();
@@ -61,6 +63,7 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     const streets = s.result ? sortStreets(s.result.streets, s.sortDir) : [];
     const q = searchKey(s.filterText);
     const homeId = s.home && s.home.cityId === s.shownCity?.id ? s.home.streetId : null;
+    const walked = s.shownCity ? walkedIn(s.walked, s.shownCity.id) : {};
     const items: HTMLLIElement[] = [];
     streets.forEach((street, i) => {
       const shown = streetName(street);
@@ -85,6 +88,13 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
         star.textContent = '⭐';
         star.title = t().ourStreet;
         name.append(star);
+      }
+      if (walked[street.id]) {
+        const mark = document.createElement('span');
+        mark.className = 'walked-mark';
+        mark.textContent = '✅';
+        mark.title = t().walkedListTitle;
+        name.append(mark);
       }
       if (street.flags.includes('tiny')) {
         const tiny = document.createElement('span');
@@ -137,6 +147,52 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     }
   }
 
+  /** Progress bar, summary and the sticker collection for the shown city. */
+  function renderWalk(s: State) {
+    walkCard.hidden = !s.result || !s.shownCity;
+    if (!s.result || !s.shownCity) return;
+    const tr = t();
+    const walked = walkedIn(s.walked, s.shownCity.id);
+    const progress = walkProgress(s.result.streets, walked);
+    const homeId = s.home && s.home.cityId === s.shownCity.id ? s.home.streetId : null;
+    const earned = earnedStickers(s.result.streets, walked, homeId);
+
+    const title = el('span', 'walk-title', tr.walkTitle);
+    const pct = progress.share * 100;
+    const pctText = pct === 0 ? '0' : pct < 1 ? pct.toFixed(1) : String(Math.round(pct));
+    const line = el(
+      'span',
+      'walk-summary',
+      progress.count
+        ? tr.walkSummary(progress.count, formatLength(progress.lengthM), pctText)
+        : tr.walkNone,
+    );
+    const bar = el('span', 'walk-bar');
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-valuemin', '0');
+    bar.setAttribute('aria-valuemax', '100');
+    bar.setAttribute('aria-valuenow', pctText);
+    const fill = el('span', 'walk-fill');
+    // A sliver stays visible from the first street, so progress can be seen at all.
+    fill.style.width = progress.count ? `${Math.max(2, Math.min(100, pct))}%` : '0';
+    bar.append(fill);
+    const count = el(
+      'span',
+      'sticker-count',
+      `🏅 ${tr.stickersLabel(earned.size, STICKERS.length)}`,
+    );
+    walkCard.querySelector('summary')!.replaceChildren(title, line, bar, count);
+
+    walkCard.querySelector('.sticker-grid')!.replaceChildren(
+      ...STICKERS.map((st) => {
+        const li = el('li', `sticker${earned.has(st.id) ? ' earned' : ''}`);
+        li.append(el('span', 'sticker-emoji', st.emoji), el('span', 'sticker-label', st.label(tr)));
+        li.setAttribute('aria-label', `${st.label(tr)}${earned.has(st.id) ? ' ✓' : ''}`);
+        return li;
+      }),
+    );
+  }
+
   function renderHeader(s: State) {
     controls.hidden = !s.result;
     if (!s.result || !s.shownCity) {
@@ -164,13 +220,17 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
       s.sortDir !== prev.sortDir ||
       s.filterText !== prev.filterText ||
       s.home !== prev.home ||
+      s.walked !== prev.walked ||
       s.lang !== prev.lang
     ) {
       renderHeader(s);
+      renderWalk(s);
       renderRows(s);
       if (s.result !== prev.result)
         list.scrollTop = 0; // a new city starts at the top
-      else if (s.home !== prev.home) markSelected(s.selectedStreetId, false);
+      else if (s.home !== prev.home || s.walked !== prev.walked) {
+        markSelected(s.selectedStreetId, false);
+      }
     } else if (s.pickedCity !== prev.pickedCity) {
       renderHeader(s);
     }
@@ -185,4 +245,11 @@ function debugLine(street: Street): HTMLElement {
   el.dir = 'ltr';
   el.textContent = `raw ${Math.round(street.rawLengthM)} m · paired ${Math.round(street.pairedShare * 100)}%${street.flags.length ? ` · ${street.flags.join(', ')}` : ''}`;
   return el;
+}
+
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = '') {
+  const e = document.createElement(tag);
+  e.className = className;
+  if (text) e.textContent = text;
+  return e;
 }

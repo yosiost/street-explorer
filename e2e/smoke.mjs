@@ -181,6 +181,12 @@ const fakeSpeech = () => {
   // Esc clears
   await page.keyboard.press('Escape');
   check((await selectedName(page)) === null, 'Esc clears selection');
+  const colorAfterEsc = await page.evaluate((n) => {
+    const { mapView, store } = window.__app;
+    const id = store.get().result.streets.find((s) => s.name === n).id;
+    return mapView.layers.get(id).options.color;
+  }, names[2]);
+  check(colorAfterEsc === '#5b6b7f', `a deselected street is no longer orange (${colorAfterEsc})`);
   // Leaflet fades popups out before removing them.
   const popupGone = await page
     .waitForSelector('.leaflet-popup', { state: 'detached', timeout: 2000 })
@@ -368,6 +374,64 @@ const fakeSpeech = () => {
   check(
     (await page.isVisible('#street-list')) && !(await page.$('.map-emoji.trophy')),
     'exiting the game brings the list back and clears the map',
+  );
+
+  // ----- Streets we walked -----
+  await openRow('ויצמן'); // our street, and the longest in the city
+  await page.click('.street-popup .set-walked');
+  await page.waitForSelector('.sticker-toast');
+  const toast = await page.textContent('.sticker-toast');
+  check(
+    toast.includes('מדבקות חדשות') &&
+      ['הרחוב הראשון', 'הרחוב הכי ארוך', 'הלכנו ברחוב שלנו', 'ק״מ ברגל'].every((x) =>
+        toast.includes(x),
+      ),
+    `walking our (longest) street earns several stickers in one pop-up: ${toast}`,
+  );
+  await shot(page, '16-sticker');
+  await page.click('.sticker-toast');
+  check(
+    (await page.textContent('.street-popup .set-walked')).startsWith('✅ הלכנו כאן'),
+    'the popup shows the street as walked, with the date',
+  );
+  check(
+    (await page.textContent('#walk-progress summary')).includes('רחוב אחד'),
+    `progress: ${await page.textContent('#walk-progress .walk-summary')}`,
+  );
+  await openRow('סיפן'); // the shortest real street
+  await page.click('.street-popup .set-walked');
+  await page.waitForSelector('.sticker-toast');
+  check(
+    (await page.textContent('.sticker-toast')).includes('הרחוב הכי קצר'),
+    'walking the shortest street earns its sticker',
+  );
+  await page.click('.sticker-toast');
+  await page.keyboard.press('Escape'); // deselect: a selected street is orange
+  const walkedColor = await page.evaluate(() => {
+    const { mapView, store } = window.__app;
+    const id = store.get().result.streets.find((s) => s.name === 'סיפן').id;
+    return mapView.layers.get(id).options.color;
+  });
+  check(walkedColor === '#2f9e44', 'walked streets are green on the map');
+  check(
+    (await page.$$eval('.walked-mark', (els) => els.length)) === 2,
+    'walked streets get a ✅ in the list',
+  );
+  await page.click('#walk-progress summary');
+  const stickers = await page.$$eval('.sticker', (els) =>
+    els.map((e) => [e.classList.contains('earned'), e.textContent]),
+  );
+  check(
+    stickers.length >= 10 && stickers.filter(([earned]) => earned).length === 5,
+    `sticker collection: ${stickers.filter(([e]) => e).length} of ${stickers.length} earned`,
+  );
+  await shot(page, '17-walk-progress');
+  await page.click('#walk-progress summary');
+  await page.reload();
+  await page.waitForSelector('.street-row');
+  check(
+    (await page.$$eval('.walked-mark', (els) => els.length)) === 2,
+    'walks are remembered after a reload',
   );
 
   // ----- Language switch -----

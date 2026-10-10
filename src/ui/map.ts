@@ -7,6 +7,7 @@ import type { Street } from '../geo/streets';
 const STREET_STYLE: L.PolylineOptions = { color: '#5b6b7f', weight: 3, opacity: 0.85 };
 const HIGHLIGHT_STYLE: L.PolylineOptions = { color: '#e8590c', weight: 6, opacity: 1 };
 const HOME_STYLE: L.PolylineOptions = { color: '#f2b705', weight: 6, opacity: 1 };
+const WALKED_STYLE: L.PolylineOptions = { color: '#2f9e44', weight: 5, opacity: 0.95 };
 // Game: everything else fades so the two contenders stand out.
 const DIM_STYLE: L.PolylineOptions = { color: '#5b6b7f', weight: 2, opacity: 0.25 };
 export const PAIR_COLORS = { red: '#e03131', blue: '#1c7ed6' } as const;
@@ -35,6 +36,7 @@ export class MapView {
   private boundary: L.GeoJSON | null = null;
   private selected: string | null = null;
   private homeId: string | null = null;
+  private walked = new Set<string>();
   private homeMarker: L.Marker | null = null;
   private pair: { red: string; blue: string } | null = null;
   private pairMarkers: L.Marker[] = [];
@@ -105,6 +107,7 @@ export class MapView {
     this.endPair();
     // Street ids repeat across cities ("הרצל#0"); main sets the new city's home again.
     this.homeId = null;
+    this.walked = new Set();
     this.homeMarker?.remove();
     this.homeMarker = null;
     this.group.clearLayers();
@@ -118,10 +121,12 @@ export class MapView {
 
   /** Moves the highlight. With `focus`, also fits the map to the street and opens its popup. */
   select(id: string | null, focus = false) {
-    if (this.selected && this.selected !== id) {
-      this.layers.get(this.selected)?.setStyle(this.styleFor(this.selected));
-    }
+    const previous = this.selected;
+    // Update first: styleFor() of the previous street must no longer see it as selected.
     this.selected = id;
+    if (previous && previous !== id) {
+      this.layers.get(previous)?.setStyle(this.styleFor(previous));
+    }
     if (!id) {
       this.map.closePopup();
       return;
@@ -138,7 +143,8 @@ export class MapView {
 
   private styleFor(id: string): L.PolylineOptions {
     if (id === this.selected) return HIGHLIGHT_STYLE;
-    return id === this.homeId ? HOME_STYLE : STREET_STYLE;
+    if (id === this.homeId) return HOME_STYLE;
+    return this.walked.has(id) ? WALKED_STYLE : STREET_STYLE;
   }
 
   private openPopup(id: string, at: L.LatLng) {
@@ -156,6 +162,14 @@ export class MapView {
     if (this.popup?.popup.isOpen()) {
       this.popup.popup.setContent(this.cb.renderPopup(this.popup.street));
     }
+  }
+
+  /** Draws the streets we walked in green. */
+  setWalked(ids: Set<string>) {
+    const changed = new Set([...this.walked, ...ids]);
+    this.walked = ids;
+    if (this.pair) return; // the game restores styles when it ends
+    for (const id of changed) this.layers.get(id)?.setStyle(this.styleFor(id));
   }
 
   /** Marks "our street" in gold with a star, when it is in this city. */

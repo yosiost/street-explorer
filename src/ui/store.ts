@@ -2,6 +2,7 @@ import type { City } from '../data/cities';
 import type { CityResult } from '../geo/pipeline';
 import type { Lang } from '../i18n';
 import type { HomeStreet } from '../kids/units';
+import type { WalkedLog } from '../kids/walked';
 
 export type LoadingStep = 'download' | 'compute';
 
@@ -40,6 +41,8 @@ export interface State {
   filterText: string;
   /** "Our street", the yardstick for kid comparisons. */
   home: HomeStreet | null;
+  /** Streets we walked, in every city. */
+  walked: WalkedLog;
   /** A Hebrew voice exists, so read-aloud buttons are shown. */
   canSpeak: boolean;
   /** The "which is longer?" game is open instead of the list. */

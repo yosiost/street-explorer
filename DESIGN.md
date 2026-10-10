@@ -222,9 +222,12 @@ Acceptance on real data (Kfar Saba):
 - *Read-aloud.* `speechSynthesis`, offered only when a voice exists for the UI language. Each piece is read by a voice picked explicitly for its script (Hebrew, English, or the default for other scripts), never left to the browser default. Lengths are spelled out ("3.3 קילומטר"), digits without separators.
 - *English.* Every string lives in `src/i18n.ts` (the English table must match the Hebrew one key for key). Switching sets `<html lang dir>`, re-renders all text, and shows streets by `name:en` (most common by length among the street's ways; 416 of 421 in Kfar Saba) and cities by `name:en`. Grouping still uses the Hebrew or local name, so lengths don't change with the language. World search asks Nominatim for `namedetails`, so a result has both names.
 
+- *Streets we walked.* A per-browser log, city → street → day. Walked streets are green on the map (our street's gold and the selection's orange win) and get a ✅ in the list. Progress is by length (share of the city's total). Stickers are derived from the log, never stored, so un-marking a street takes back what it earned; new ones pop up together in one card with confetti. The shortest-street sticker ignores `tiny` fragments.
+
 - [x] Round 1 pairs differ by at least 2×; a right answer scores, a wrong one says "almost" gently.
 - [x] Setting our street updates the open popup, stars the list row, and survives a reload.
 - [x] Hebrew text is always read by the Hebrew voice, also in the English UI.
 - [x] Switching language mid-game keeps the round and flips the page direction.
+- [x] Walking our street (also the longest) earns four stickers in one pop-up; walks survive a reload.
 
 Suggested first prompt for Claude Code: "Read DESIGN.md. Implement milestone 1 only, then stop and summarize." Save this doc as `DESIGN.md` in the repo root (export as Markdown).
