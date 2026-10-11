@@ -57,6 +57,10 @@ Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
      longer (a button, or the line on the map). Both lengths race as bars, and the winner
      gets a 🏆. It starts easy (one street at least twice as long) and gets closer as the
      streak grows. Tiny fragments are never asked about.
+   - **🔎 Find the street:** the app says a street's name, and the kid finds it on the map
+     and taps it. A wrong tap says which street that was; the second zooms in as a clue,
+     the third shows it. It starts with the 20 longest streets (plus the ones you walked)
+     and opens up to the whole city as the streak grows. A tap close to the line counts.
    - **⭐ Our street:** in any street's popup, mark it as "our street". Every other street is
      then compared with it ("like 8 of our street, end to end"), and it is drawn in gold
      with a star. Popups also count kid steps (half a meter each).
@@ -65,6 +69,13 @@ Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
      progress (streets, km, share of the city) and a sticker collection to fill: first
      street, 5/10/25/50 streets, 1/5/10 km, our street, the longest and the shortest
      street, all four directions, 10%/50%/all of the city. Locked stickers show faded.
+   - **✏️ Street alphabet:** each walked street fills in the letter on its sign (א for
+     אחד העם…). The board shows all 22 letters, in English cities A–Z; letters no street
+     in the city starts with are greyed out. Collecting all of them earns a sticker.
+   - **📜 Named after:** popups say who the street is named after, with one sentence for a
+     kid ("Herzl dreamed of a country for the Jewish people…"), and read it aloud. The list
+     is hand-written (`kids/namesakes.ts`, 95 people) because OSM rarely has
+     `name:etymology`; it covers 77 of Kfar Saba's 421 streets.
    - **🔊 Read aloud:** popups and the game can read names and lengths aloud with the
      browser's built-in voices. A Hebrew voice reads Hebrew and an English voice reads
      English, so a Hebrew street name is read in Hebrew even in the English UI.
@@ -139,6 +150,9 @@ src/
   kids/units.ts        kid steps, comparisons with our street, read-aloud text
   kids/pair.ts         picking fair "which is longer?" pairs
   kids/walked.ts       streets we walked: progress and stickers
+  kids/alphabet.ts     the street alphabet: first letters, letters collected
+  kids/find.ts         picking the street to find
+  kids/namesakes.ts    who streets are named after (hand-written list)
   i18n.ts              every UI string in Hebrew and English
   geo/boundary.ts      boundary ring assembly, spatial index, line clipping
   geo/streets.ts       naming, grouping, components, dedup, measuring, flags

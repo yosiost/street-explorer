@@ -66,7 +66,7 @@ export function mountGame(panel: HTMLElement, store: Store, mapView: MapView) {
     choiceBtn[side].addEventListener('click', () => pair && answer(pair[side].id));
   }
   next.addEventListener('click', newRound);
-  exitBtn.addEventListener('click', () => store.set({ gameOn: false }));
+  exitBtn.addEventListener('click', () => store.set({ game: null }));
   voiceBtn.addEventListener('click', () => {
     voice = !voice;
     writeVoicePref(voice);
@@ -137,7 +137,7 @@ export function mountGame(panel: HTMLElement, store: Store, mapView: MapView) {
       homeId,
     });
     if (!p) {
-      store.set({ gameOn: false });
+      store.set({ game: null });
       return;
     }
     pair = p;
@@ -223,14 +223,15 @@ export function mountGame(panel: HTMLElement, store: Store, mapView: MapView) {
   }
 
   store.subscribe((s, prev) => {
-    if (s.gameOn !== prev.gameOn) {
-      if (s.gameOn) start();
+    const on = s.game === 'longer';
+    if (on !== (prev.game === 'longer')) {
+      if (on) start();
       else stop();
     }
     // A different city ends the game.
-    if (s.gameOn && s.result !== prev.result) store.set({ gameOn: false });
+    if (on && s.result !== prev.result) store.set({ game: null });
     if (s.canSpeak !== prev.canSpeak) renderVoice();
-    if (s.lang !== prev.lang && s.gameOn) renderText();
+    if (s.lang !== prev.lang && on) renderText();
   });
 
   return { answer };
@@ -268,20 +269,20 @@ function raceRow(side: Side) {
   };
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = '') {
+export function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = '') {
   const e = document.createElement(tag);
   if (className) e.className = className;
   if (text) e.textContent = text;
   return e;
 }
 
-function button(className: string, text: string) {
+export function button(className: string, text: string) {
   const b = el('button', className, text);
   b.type = 'button';
   return b;
 }
 
-function readVoicePref(): boolean {
+export function readVoicePref(): boolean {
   try {
     return localStorage.getItem(VOICE_KEY) !== 'off';
   } catch {
@@ -289,7 +290,7 @@ function readVoicePref(): boolean {
   }
 }
 
-function writeVoicePref(on: boolean) {
+export function writeVoicePref(on: boolean) {
   try {
     localStorage.setItem(VOICE_KEY, on ? 'on' : 'off');
   } catch {

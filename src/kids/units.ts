@@ -1,6 +1,7 @@
 import { KID_STEP_M } from '../config';
 import type { Orientation } from '../geo/orientation';
 import { getLang, locale, t } from '../i18n';
+import type { Namesake } from './namesakes';
 
 /** The family's own street, the yardstick for every other street. */
 export interface HomeStreet {
@@ -82,6 +83,7 @@ export const sayName = (name: string): SpeechPart => ({ text: name, voice: voice
 export function spokenStreet(
   street: { id: string; name: string; lengthM: number; orientation: Orientation },
   home: HomeStreet | null,
+  namesake: Namesake | null = null,
 ): SpeechPart[] {
   const s = t();
   const facts = [
@@ -94,5 +96,10 @@ export function spokenStreet(
     // Plain digits: "6,600" can come out as "six comma six hundred".
     facts.push(vsHome ?? s.spokenKidSteps(kidSteps(street.lengthM)));
   }
-  return [sayName(street.name), say(facts.join('. '))];
+  const parts = [sayName(street.name), say(facts.join('. '))];
+  if (namesake) {
+    const p = namesake[getLang()];
+    parts.push(say(`${s.spokenNamedAfter(p.name)} ${p.about}`));
+  }
+  return parts;
 }

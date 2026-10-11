@@ -20,6 +20,9 @@ import { celebrate } from './ui/celebrate';
 import { spokenStreet } from './kids/units';
 import { mountDebug } from './ui/debug';
 import { canPlay, mountGame } from './ui/game';
+import { mountFind } from './ui/find';
+import { findNamesake } from './kids/namesakes';
+import { collectedLetters, cityAlphabet } from './kids/alphabet';
 import { mountList } from './ui/list';
 import { MapView } from './ui/map';
 import { mountPicker } from './ui/picker';
@@ -53,7 +56,7 @@ const store = createStore({
   home: loadHome(),
   walked: loadWalked(),
   canSpeak: false,
-  gameOn: false,
+  game: null,
 });
 
 // --- Selection: list and map both write selectedStreetId; the map follows it. ---
@@ -64,6 +67,7 @@ const mapView = new MapView($('#map'), {
   onStreetClick: (id) => store.set({ selectedStreetId: id }),
   onEmptyClick: () => store.set({ selectedStreetId: null }),
   onPairClick: (id) => game.answer(id),
+  onFindClick: (id) => find.tap(id),
   renderPopup: (street) =>
     popupContent(street, {
       home: store.get().home,
@@ -71,7 +75,8 @@ const mapView = new MapView($('#map'), {
       canSpeak: store.get().canSpeak,
       onToggleHome: toggleHome,
       onToggleWalked: toggleWalkedStreet,
-      onSpeak: (s) => speak(spokenStreet({ ...s, name: streetName(s) }, store.get().home)),
+      onSpeak: (s) =>
+        speak(spokenStreet({ ...s, name: streetName(s) }, store.get().home, findNamesake(s))),
     }),
 });
 
@@ -119,22 +124,49 @@ function toggleWalkedStreet(street: Street) {
   });
 }
 
-/** Runs a change, then pops up every sticker it earned. */
+/** Runs a change, then pops up every sticker and alef-bet letter it earned. */
 function celebrateNewStickers(change: () => void) {
   const earnedNow = () => {
     const { result, shownCity, walked, home } = store.get();
-    if (!result || !shownCity) return new Set<string>();
+    if (!result || !shownCity) {
+      return { stickers: new Set<string>(), letters: new Map<string, Street>() };
+    }
     const homeId = home && home.cityId === shownCity.id ? home.streetId : null;
-    return earnedStickers(result.streets, walkedIn(walked, shownCity.id), homeId);
+    const inCity = walkedIn(walked, shownCity.id);
+    const alphabet = cityAlphabet(result.streets);
+    return {
+      stickers: earnedStickers(result.streets, inCity, homeId),
+      letters: alphabet
+        ? collectedLetters(result.streets, inCity, alphabet)
+        : new Map<string, Street>(),
+    };
   };
   const before = earnedNow();
   change();
   const after = earnedNow();
-  const fresh = STICKERS.filter((st) => after.has(st.id) && !before.has(st.id));
-  celebrate(
-    fresh.length > 1 ? t().stickersNew(fresh.length) : t().stickerNew,
-    fresh.map((st) => ({ emoji: st.emoji, label: st.label(t()) })),
+  const s = t();
+  const stickers = STICKERS.filter(
+    (st) => after.stickers.has(st.id) && !before.stickers.has(st.id),
   );
+  const letters = [...after.letters].filter(([letter]) => !before.letters.has(letter));
+  const items = [
+    ...stickers.map((st) => ({ emoji: st.emoji, label: st.label(s) })),
+    ...letters.map(([letter, street]) => ({
+      emoji: letter,
+      label: s.letterFrom(letter, streetName(street)),
+    })),
+  ];
+  const title =
+    stickers.length && letters.length
+      ? s.newThings
+      : stickers.length
+        ? stickers.length > 1
+          ? s.stickersNew(stickers.length)
+          : s.stickerNew
+        : letters.length > 1
+          ? s.lettersNew(letters.length)
+          : s.letterNew;
+  celebrate(title, items);
 }
 
 store.subscribe((s, prev) => {
@@ -187,17 +219,29 @@ mountList($('.list-pane'), store, (id) => {
   store.set({ selectedStreetId: id });
 });
 
-// --- "Which is longer?" game: replaces the list while it runs. ---
+// --- Games: "which is longer?" and "find it!" replace the list while they run. ---
 
 const game = mountGame($('#game-panel'), store, mapView);
-const startGame = $<HTMLButtonElement>('#start-game');
-startGame.addEventListener('click', () => store.set({ gameOn: true, selectedStreetId: null }));
+const find = mountFind($('#find-panel'), store, mapView);
+const startButtons = {
+  longer: $<HTMLButtonElement>('#start-game'),
+  find: $<HTMLButtonElement>('#start-find'),
+};
+for (const kind of ['longer', 'find'] as const) {
+  startButtons[kind].addEventListener('click', () =>
+    store.set({ game: kind, selectedStreetId: null }),
+  );
+}
 store.subscribe((s, prev) => {
-  if (s.result !== prev.result) startGame.disabled = !s.result || !canPlay(s.result.streets);
-  if (s.gameOn !== prev.gameOn) {
-    $('.list-pane').classList.toggle('game-on', s.gameOn);
-    $('#game-panel').hidden = !s.gameOn;
-    if (!s.gameOn) startGame.focus({ preventScroll: true });
+  if (s.result !== prev.result) {
+    const playable = !!s.result && canPlay(s.result.streets);
+    for (const b of Object.values(startButtons)) b.disabled = !playable;
+  }
+  if (s.game !== prev.game) {
+    $('.list-pane').classList.toggle('game-on', !!s.game);
+    $('#game-panel').hidden = s.game !== 'longer';
+    $('#find-panel').hidden = s.game !== 'find';
+    if (prev.game && !s.game) startButtons[prev.game].focus({ preventScroll: true });
   }
 });
 

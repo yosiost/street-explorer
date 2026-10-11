@@ -1,5 +1,6 @@
-import { locale, t } from '../i18n';
+import { getLang, locale, t } from '../i18n';
 import type { Street } from '../geo/streets';
+import { findNamesake } from '../kids/namesakes';
 import { compareToHome, formatSteps, type HomeStreet } from '../kids/units';
 import { bdi } from './dom';
 import { formatLength, formatPitches } from './format';
@@ -56,6 +57,18 @@ export function popupContent(street: Street, ctx: PopupContext): HTMLElement {
   line('👣', formatSteps(street.lengthM));
   line('⚽', formatPitches(street.lengthM));
 
+  // Who the street is named after, when we know.
+  const person = findNamesake(street);
+  let fact: HTMLElement | null = null;
+  if (person) {
+    const p = person[getLang()];
+    fact = document.createElement('p');
+    fact.className = 'namesake';
+    const who = document.createElement('strong');
+    who.textContent = s.namedAfter(p.name);
+    fact.append(`${person.emoji} `, who, ` ${p.about}`);
+  }
+
   const actions = document.createElement('div');
   actions.className = 'popup-actions';
   if (ctx.canSpeak) {
@@ -84,7 +97,9 @@ export function popupContent(street: Street, ctx: PopupContext): HTMLElement {
   walkBtn.addEventListener('click', () => ctx.onToggleWalked(street));
   actions.append(walkBtn);
 
-  el.append(h, dl, fun, actions);
+  el.append(h, dl, fun);
+  if (fact) el.append(fact);
+  el.append(actions);
   // A button re-renders the popup mid-click; by the time the click reaches the map its
   // target is detached, and Leaflet would take it for a click on empty map.
   el.addEventListener('click', (e) => e.stopPropagation());

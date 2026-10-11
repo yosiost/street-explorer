@@ -1,5 +1,6 @@
 import type { Street } from '../geo/streets';
 import type { Strings } from '../i18n';
+import { availableLetters, cityAlphabet, collectedLetters } from './alphabet';
 
 /** Streets walked, per city: city id → street id → the day it was marked (YYYY-MM-DD). */
 export type WalkedLog = Record<string, Record<string, string>>;
@@ -161,6 +162,21 @@ export const STICKERS: Sticker[] = [
     emoji: '👑',
     label: (s) => s.stickerWholeCity,
     earned: (c) => c.progress.share >= 0.999,
+  },
+  {
+    id: 'alphabet',
+    emoji: '✏️',
+    label: (s) => s.stickerAlphabet,
+    earned: (c) => {
+      const alphabet = cityAlphabet(c.streets);
+      if (!alphabet) return false;
+      const available = availableLetters(c.streets, alphabet);
+      // A town with a handful of letters is not much of an alphabet.
+      return (
+        available.size >= 10 &&
+        collectedLetters(c.streets, c.walked, alphabet).size === available.size
+      );
+    },
   },
 ];
 

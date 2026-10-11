@@ -89,11 +89,21 @@
           <details class="walk-progress" id="walk-progress" hidden>
             <summary></summary>
             <ul class="sticker-grid"></ul>
+            <section class="alphabet" hidden>
+              <h3 class="alphabet-title"></h3>
+              <p class="alphabet-hint"></p>
+              <ul class="letter-grid"></ul>
+            </section>
           </details>
           <div class="list-controls" hidden>
-            <button type="button" id="start-game" class="game-button" data-i18n="startGame">
-              🎮 משחק: מה יותר ארוך?
-            </button>
+            <div class="game-buttons">
+              <button type="button" id="start-game" class="game-button" data-i18n="startGame">
+                🎮 משחק: מה יותר ארוך?
+              </button>
+              <button type="button" id="start-find" class="game-button find" data-i18n="startFind">
+                🔎 משחק: איפה הרחוב?
+              </button>
+            </div>
             <div
               class="sort-toggle"
               role="group"
@@ -124,6 +134,13 @@
           id="game-panel"
           aria-label="משחק: מה יותר ארוך?"
           data-i18n-attr="aria-label:gameLabel"
+          hidden
+        ></section>
+        <section
+          class="game-panel"
+          id="find-panel"
+          aria-label="משחק: איפה הרחוב?"
+          data-i18n-attr="aria-label:findLabel"
           hidden
         ></section>
         <div class="debug-panel" id="debug-panel" hidden></div>

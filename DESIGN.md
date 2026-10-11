@@ -222,6 +222,9 @@ Acceptance on real data (Kfar Saba):
 - *Read-aloud.* `speechSynthesis`, offered only when a voice exists for the UI language. Each piece is read by a voice picked explicitly for its script (Hebrew, English, or the default for other scripts), never left to the browser default. Lengths are spelled out ("3.3 קילומטר"), digits without separators.
 - *English.* Every string lives in `src/i18n.ts` (the English table must match the Hebrew one key for key). Switching sets `<html lang dir>`, re-renders all text, and shows streets by `name:en` (most common by length among the street's ways; 416 of 421 in Kfar Saba) and cities by `name:en`. Grouping still uses the Hebrew or local name, so lengths don't change with the language. World search asks Nominatim for `namedetails`, so a result has both names.
 
+- *Find the street.* The name is shown and read aloud; every street is tappable and no popups open. Targets are one per street name (any piece counts) and come from the 20 longest, then 50, then all (`FIND_LEVELS`), with walked streets and our street always in the pool at double weight; the last eight names are skipped. A tap within 14 px of the target counts even if another line is on top. Wrong tap 1 names the tapped street, 2 zooms in on the target's neighbourhood, 3 reveals it.
+- *Street alphabet.* The letter is the first letter of the local name (`street.name`, what the sign says), so it does not change with the UI language. The city's alphabet is the script most of its names start with (Hebrew or Latin; none for other scripts). A letter goes to the first street walked that starts with it. The alphabet sticker needs every letter the city has, and at least 10.
+- *Named after.* A hand-written list (`kids/namesakes.ts`): OSM has no `name:etymology` in Kfar Saba. Lookup strips the kind of street (שדרות, דרך, Street, Rue de…) and titles (ד״ר, האלוף), unifies geresh variants, and never matches a lone first name (רחל, לוי). Shown in the popup and after a find; read aloud after the street's facts.
 - *Streets we walked.* A per-browser log, city → street → day. Walked streets are green on the map (our street's gold and the selection's orange win) and get a ✅ in the list. Progress is by length (share of the city's total). Stickers are derived from the log, never stored, so un-marking a street takes back what it earned; new ones pop up together in one card with confetti. The shortest-street sticker ignores `tiny` fragments.
 
 - [x] Round 1 pairs differ by at least 2×; a right answer scores, a wrong one says "almost" gently.
@@ -229,5 +232,8 @@ Acceptance on real data (Kfar Saba):
 - [x] Hebrew text is always read by the Hebrew voice, also in the English UI.
 - [x] Switching language mid-game keeps the round and flips the page direction.
 - [x] Walking our street (also the longest) earns four stickers in one pop-up; walks survive a reload.
+- [x] Find: round 1 asks about a long street; a near tap finds it; three misses give a clue, then the answer.
+- [x] Walking ויצמן fills in ו on the alphabet board; Kfar Saba has a street for all 22 letters.
+- [x] ויצמן's popup says it is named after Chaim Weizmann, the first president, and reads it aloud.
 
 Suggested first prompt for Claude Code: "Read DESIGN.md. Implement milestone 1 only, then stop and summarize." Save this doc as `DESIGN.md` in the repo root (export as Markdown).

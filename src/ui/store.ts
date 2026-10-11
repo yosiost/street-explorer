@@ -19,6 +19,9 @@ export type Status =
   | { kind: 'error'; reason: ErrorReason }
   | { kind: 'ready' };
 
+/** The game open instead of the list. */
+export type GameKind = 'longer' | 'find';
+
 export type ErrorReason = 'network' | 'network-large' | 'processing' | 'too-big';
 
 export interface State {
@@ -45,8 +48,8 @@ export interface State {
   walked: WalkedLog;
   /** A Hebrew voice exists, so read-aloud buttons are shown. */
   canSpeak: boolean;
-  /** The "which is longer?" game is open instead of the list. */
-  gameOn: boolean;
+  /** The game open instead of the list, if any. */
+  game: GameKind | null;
 }
 
 type Listener = (state: State, prev: State) => void;

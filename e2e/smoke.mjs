@@ -279,6 +279,10 @@ const fakeSpeech = () => {
   await openRow('ויצמן');
   let popupText = await page.textContent('.street-popup');
   check(popupText.includes('👣') && popupText.includes('צעדים של ילד'), 'popup shows kid steps');
+  check(
+    popupText.includes('על שם חיים ויצמן') && popupText.includes('הנשיא הראשון'),
+    'popup says who the street is named after',
+  );
   await page.click('.street-popup .set-home');
   await page.waitForSelector('.street-popup .set-home[aria-pressed=true]');
   popupText = await page.textContent('.street-popup');
@@ -302,6 +306,15 @@ const fakeSpeech = () => {
   check(
     spoken.includes('סיפן') && spoken.includes('מטר') && spoken.includes('הרחוב שלנו'),
     `read-aloud: ${spoken}`,
+  );
+  check(!spoken.includes('נקרא על שם'), 'no namesake is read for a street without one');
+  await openRow('ויצמן');
+  await page.click('.street-popup .speak');
+  check(
+    (await page.evaluate(() => window.__spoken.join(' | '))).includes(
+      'הרחוב נקרא על שם חיים ויצמן',
+    ),
+    'read-aloud says who the street is named after',
   );
   await page.keyboard.press('Escape');
 
@@ -376,16 +389,114 @@ const fakeSpeech = () => {
     'exiting the game brings the list back and clears the map',
   );
 
+  // ----- "Find it!" game -----
+  /** A screen point on a street that is not the target, away from it and inside the map. */
+  const wrongPoint = () =>
+    page.evaluate(() => {
+      const { mapView, store } = window.__app;
+      const target = document.querySelector('.find-name bdi').textContent;
+      const r = document.querySelector('#map').getBoundingClientRect();
+      const streets = store.get().result.streets;
+      const near = streets.filter((s) => s.name === target).map((s) => mapView.pointOnStreet(s.id));
+      for (const s of [...streets].sort((a, b) => b.lengthM - a.lengthM)) {
+        if (s.name === target) continue;
+        const p = mapView.pointOnStreet(s.id);
+        if (p.x < 30 || p.y < 30 || p.x > r.width - 30 || p.y > r.height - 30) continue;
+        if (near.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < 80)) continue;
+        return { x: r.left + p.x, y: r.top + p.y };
+      }
+      return null;
+    });
+  const targetPoint = () =>
+    page.evaluate(() => {
+      const { mapView, store } = window.__app;
+      const target = document.querySelector('.find-name bdi').textContent;
+      const longest = store
+        .get()
+        .result.streets.filter((s) => s.name === target)
+        .sort((a, b) => b.lengthM - a.lengthM)[0];
+      const p = mapView.pointOnStreet(longest.id);
+      const r = document.querySelector('#map').getBoundingClientRect();
+      return { x: r.left + p.x, y: r.top + p.y };
+    });
+  const verdictText = async (prefix) => {
+    await page.waitForFunction(
+      (pre) => document.querySelector('#find-panel .verdict').textContent.startsWith(pre),
+      prefix,
+      { timeout: 5000 },
+    );
+    return page.textContent('#find-panel .verdict');
+  };
+
+  await page.click('#start-find');
+  await page.waitForSelector('#find-panel:not([hidden]) .find-name bdi');
+  check(await page.isHidden('#street-list'), 'find game replaces the list');
+  const target1 = await page.textContent('.find-name bdi');
+  const lengths = await page.evaluate(() =>
+    window.__app.store
+      .get()
+      .result.streets.map((s) => s.lengthM)
+      .sort((a, b) => b - a),
+  );
+  check((await lengthOf(target1)) >= lengths[40], `round 1 asks about a long street: ${target1}`);
+  check(
+    await page.evaluate((n) => window.__spoken.join(' ').includes(`מצאו במפה את ${n}`), target1),
+    'the street to find is read aloud',
+  );
+  await shot(page, '18-find-question');
+  let wp = await wrongPoint();
+  await page.mouse.click(wp.x, wp.y);
+  await verdictText('זה');
+  check(
+    !(await page.$('.street-popup')),
+    'a wrong tap says which street it was, and opens no popup',
+  );
+  let tp = await targetPoint();
+  await page.mouse.click(tp.x, tp.y);
+  check((await verdictText('מצאתם')).length > 0, 'tapping the street finds it');
+  check((await page.textContent('#find-panel .game-score')).includes('1'), 'find: score goes up');
+  check(!!(await page.$('.map-emoji.trophy')), 'find: a marker on the found street');
+  await page.waitForTimeout(400);
+  await shot(page, '19-find-found');
+
+  // Round 2: three wrong taps; the second zooms in as a clue, the third shows it.
+  await page.click('#find-panel .game-next');
+  await page.waitForFunction((prev) => {
+    const n = document.querySelector('.find-name bdi')?.textContent;
+    return n && n !== prev;
+  }, target1);
+  const zoom0 = await page.evaluate(() => window.__app.mapView.map.getZoom());
+  wp = await wrongPoint();
+  await page.mouse.click(wp.x, wp.y);
+  await verdictText('זה');
+  wp = await wrongPoint();
+  await page.mouse.click(wp.x, wp.y);
+  await verdictText('רמז');
+  await page.waitForTimeout(600);
+  check(
+    (await page.evaluate(() => window.__app.mapView.map.getZoom())) > zoom0,
+    'the second wrong tap zooms in as a clue',
+  );
+  wp = await wrongPoint();
+  if (wp) {
+    await page.mouse.click(wp.x, wp.y);
+    check((await verdictText('הנה הוא')).length > 0, 'the third wrong tap shows the street');
+  } else check(false, 'found a wrong street to tap after the clue');
+  await page.click('#find-panel .game-exit');
+  check(
+    (await page.isVisible('#street-list')) && !(await page.$('.map-emoji.trophy')),
+    'exiting find brings the list back and clears the map',
+  );
+
   // ----- Streets we walked -----
   await openRow('ויצמן'); // our street, and the longest in the city
   await page.click('.street-popup .set-walked');
   await page.waitForSelector('.sticker-toast');
   const toast = await page.textContent('.sticker-toast');
   check(
-    toast.includes('מדבקות חדשות') &&
-      ['הרחוב הראשון', 'הרחוב הכי ארוך', 'הלכנו ברחוב שלנו', 'ק״מ ברגל'].every((x) =>
-        toast.includes(x),
-      ),
+    ['הרחוב הראשון', 'הרחוב הכי ארוך', 'הלכנו ברחוב שלנו', 'ק״מ ברגל', 'ו של ויצמן'].every((x) =>
+      toast.includes(x),
+    ),
     `walking our (longest) street earns several stickers in one pop-up: ${toast}`,
   );
   await shot(page, '16-sticker');
@@ -402,8 +513,9 @@ const fakeSpeech = () => {
   await page.click('.street-popup .set-walked');
   await page.waitForSelector('.sticker-toast');
   check(
-    (await page.textContent('.sticker-toast')).includes('הרחוב הכי קצר'),
-    'walking the shortest street earns its sticker',
+    (await page.textContent('.sticker-toast')).includes('הרחוב הכי קצר') &&
+      (await page.textContent('.sticker-toast')).includes('ס של סיפן'),
+    'walking the shortest street earns its sticker and the letter ס',
   );
   await page.click('.sticker-toast');
   await page.keyboard.press('Escape'); // deselect: a selected street is orange
@@ -424,6 +536,19 @@ const fakeSpeech = () => {
   check(
     stickers.length >= 10 && stickers.filter(([earned]) => earned).length === 5,
     `sticker collection: ${stickers.filter(([e]) => e).length} of ${stickers.length} earned`,
+  );
+  const letters = await page.$$eval('.letter', (els) =>
+    els.filter((e) => e.classList.contains('earned')).map((e) => e.textContent),
+  );
+  check(
+    (await page.$$eval('.letter', (els) => els.length)) === 22 &&
+      letters.length === 2 &&
+      letters.some((l) => l.includes('ויצמן')),
+    `alef-bet board: ${letters.join(', ')}`,
+  );
+  check(
+    (await page.textContent('#walk-progress summary')).includes('✏️ 2/22'),
+    'the letter count shows on the progress card',
   );
   await shot(page, '17-walk-progress');
   await page.click('#walk-progress summary');
@@ -692,6 +817,18 @@ const fakeSpeech = () => {
     () => document.documentElement.scrollWidth > window.innerWidth,
   );
   check(!gameOverflow, 'mobile: game fits the screen');
+  await page.tap('.game-exit');
+  await page.tap('#start-find');
+  await page.waitForSelector('#find-panel:not([hidden]) .find-name bdi');
+  await page.waitForTimeout(300);
+  check(
+    !(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)),
+    'mobile: find game fits the screen',
+  );
+  await shot(page, '07c-mobile-find');
+  await page.tap('#find-panel .game-exit');
+  await page.tap('#start-game');
+  await page.waitForSelector('.choice.red');
   const toggleBox = await (await page.$('#lang-toggle')).boundingBox();
   const titleBox = await (await page.$('.app-title')).boundingBox();
   check(

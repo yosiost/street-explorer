@@ -130,6 +130,37 @@ const he = {
   stickerCompass: 'כל ארבעת הכיוונים',
   stickerShare: (n: number) => `${n}% מהעיר`,
   stickerWholeCity: 'כל העיר!',
+  stickerAlphabet: 'כל האלף־בית!',
+
+  // Alef-bet hunt
+  alphabetTitle: '✏️ אלף־בית של רחובות',
+  alphabetHint: 'לכל אות, רחוב שהלכנו בו ושמתחיל בה. איזו אות חסרה?',
+  alphabetCount: (n: number, total: number) => `${n} מתוך ${total} אותיות`,
+  letterMissing: 'אין בעיר רחוב שמתחיל באות הזו',
+  letterNew: 'אות חדשה!',
+  lettersNew: (n: number) => `${n} אותיות חדשות!`,
+  letterFrom: (letter: string, name: string) => `${letter} של ${name}`,
+  newThings: 'יש!',
+
+  // Who the street is named after
+  namedAfter: (name: string) => `על שם ${name}`,
+  spokenNamedAfter: (name: string) => `הרחוב נקרא על שם ${name}.`,
+
+  // "Find it!" game
+  startFind: '🔎 משחק: איפה הרחוב?',
+  findTitle: 'איפה הרחוב?',
+  findLabel: 'משחק: איפה הרחוב?',
+  findHint: 'מצאו את הרחוב במפה ולחצו עליו. אפשר להגדיל את המפה עם האצבעות.',
+  findSayAgain: '🔊 שוב',
+  findRight: 'מצאתם! 🎉',
+  findWrong: ['זה', '. נסו שוב!'] as [string, string],
+  findClue: 'רמז: הוא איפשהו פה. המפה התקרבה אליו.',
+  findReveal: 'הנה הוא! בפעם הבאה תמצאו.',
+  spokenFind: ['מצאו במפה את', ''] as [string, string],
+  spokenFound: 'מצאתם!',
+  spokenWrong: ['זה', 'נסו שוב!'] as [string, string],
+  spokenClue: 'רמז: הוא איפשהו פה.',
+  spokenReveal: 'הנה הוא!',
 
   // Game
   gameTitle: 'מה יותר ארוך?',
@@ -277,6 +308,34 @@ const en: Strings = {
   stickerCompass: 'All four directions',
   stickerShare: (n) => `${n}% of the city`,
   stickerWholeCity: 'The whole city!',
+  stickerAlphabet: 'The whole alphabet!',
+
+  alphabetTitle: '✏️ Street alphabet',
+  alphabetHint: 'For every letter, a street we walked that starts with it. Which one is missing?',
+  alphabetCount: (n, total) => `${n} of ${total} letters`,
+  letterMissing: 'No street in this city starts with this letter',
+  letterNew: 'New letter!',
+  lettersNew: (n) => `${n} new letters!`,
+  letterFrom: (letter, name) => `${letter} for ${name}`,
+  newThings: 'Yay!',
+
+  namedAfter: (name) => `Named after ${name}`,
+  spokenNamedAfter: (name) => `It is named after ${name}.`,
+
+  startFind: '🔎 Game: find the street',
+  findTitle: 'Where is it?',
+  findLabel: 'Game: find the street',
+  findHint: 'Find the street on the map and tap it. You can zoom in with your fingers.',
+  findSayAgain: '🔊 Again',
+  findRight: 'You found it! 🎉',
+  findWrong: ['That’s', '. Try again!'],
+  findClue: 'Clue: it’s somewhere here. The map zoomed in on it.',
+  findReveal: 'Here it is! You’ll find the next one.',
+  spokenFind: ['Find', 'on the map'],
+  spokenFound: 'You found it!',
+  spokenWrong: ['That is', 'Try again!'],
+  spokenClue: 'Clue: it is somewhere here.',
+  spokenReveal: 'Here it is!',
 
   gameTitle: 'Which is longer?',
   gameLabel: 'Game: which is longer?',

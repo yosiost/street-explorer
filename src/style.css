@@ -724,6 +724,79 @@ button.secondary {
   line-height: 1.2;
 }
 
+/* Alef-bet hunt */
+.alphabet {
+  padding: 0 10px 12px;
+}
+
+.alphabet[hidden] {
+  display: none;
+}
+
+.alphabet-title {
+  margin: 4px 0 2px;
+  font-size: 1rem;
+}
+
+.alphabet-hint {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.letter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.letter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 4px 2px;
+  border-radius: var(--radius);
+  border: 2px dashed var(--border);
+  color: var(--muted);
+  text-align: center;
+}
+
+.letter-char {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.letter.earned {
+  border: 2px solid var(--good);
+  background: #ebfbee;
+  color: #1b5e20;
+}
+
+.letter-street {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* No street in this city starts with it: not a goal. */
+.letter.missing {
+  border-style: solid;
+  opacity: 0.3;
+}
+
+.letter-count {
+  margin-inline-start: 8px;
+}
+
 .sticker-toast {
   position: fixed;
   inset-inline: 0;
@@ -807,6 +880,16 @@ button.secondary {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.game-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.game-button.find {
+  background: linear-gradient(90deg, var(--good), #0c8599);
 }
 
 .game-button:disabled {
@@ -998,6 +1081,60 @@ button.secondary {
   text-align: center;
 }
 
+/* "Find it!" */
+.find-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--good);
+  background: #ebfbee;
+}
+
+.find-name {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #1b5e20;
+}
+
+.find-again {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9375rem;
+}
+
+.find-again[hidden] {
+  display: none;
+}
+
+.verdict.wrong {
+  color: var(--red);
+}
+
+.find-fact,
+.street-popup .namesake {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: #fff9db;
+  line-height: 1.45;
+}
+
+.find-fact[hidden] {
+  display: none;
+}
+
+.street-popup .namesake {
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
 .praise {
   margin: 0;
   font-size: 1.125rem;
@@ -1147,8 +1284,12 @@ button.secondary {
     flex-wrap: wrap;
   }
 
-  .game-button {
+  .game-buttons {
     flex-basis: 100%;
+  }
+
+  .game-button {
+    font-size: 0.875rem;
   }
 
   .choice {

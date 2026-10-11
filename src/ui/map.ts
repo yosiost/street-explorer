@@ -12,6 +12,9 @@ const WALKED_STYLE: L.PolylineOptions = { color: '#2f9e44', weight: 5, opacity: 
 const DIM_STYLE: L.PolylineOptions = { color: '#5b6b7f', weight: 2, opacity: 0.25 };
 export const PAIR_COLORS = { red: '#e03131', blue: '#1c7ed6' } as const;
 const pairStyle = (color: string, weight = 8): L.PolylineOptions => ({ color, weight, opacity: 1 });
+// How far from the street to find a tap still counts (a finger is wide).
+const FIND_SLACK_PX = 14;
+const FOUND_STYLE: L.PolylineOptions = { color: '#2f9e44', weight: 9, opacity: 1 };
 const BOUNDARY_STYLE: L.PathOptions = {
   color: '#3b5bdb',
   weight: 2,
@@ -25,6 +28,8 @@ export interface MapCallbacks {
   onEmptyClick(): void;
   /** A click on one of the two game streets. */
   onPairClick(id: string): void;
+  /** A click on any street while "Find it!" runs. */
+  onFindClick(id: string): void;
   renderPopup(street: Street): HTMLElement;
 }
 
@@ -41,6 +46,8 @@ export class MapView {
   private pair: { red: string; blue: string } | null = null;
   private pairMarkers: L.Marker[] = [];
   private popup: { street: Street; popup: L.Popup } | null = null;
+  /** "Find it!": streets drawn differently this round, and its markers. */
+  private find: { targets: string[]; marked: Set<string>; markers: L.Marker[] } | null = null;
   private lastStreetClickAt = -1;
 
   constructor(
@@ -50,7 +57,8 @@ export class MapView {
     // Canvas keeps thousands of streets responsive. The renderer's tolerance widens the
     // click target around every line (~13 px total) so thin streets are easy to tap.
     const renderer = L.canvas({ tolerance: 5 });
-    this.map = L.map(container, { preferCanvas: true, renderer }).setView(
+    // Half zoom steps: a whole city fits a phone screen much more snugly.
+    this.map = L.map(container, { preferCanvas: true, renderer, zoomSnap: 0.5 }).setView(
       DEFAULT_CENTER,
       DEFAULT_ZOOM,
     );
@@ -67,6 +75,10 @@ export class MapView {
       const id = (e.propagatedFrom as L.Polyline & { streetId?: string }).streetId;
       if (!id) return;
       this.lastStreetClickAt = e.originalEvent.timeStamp;
+      if (this.find) {
+        cb.onFindClick(this.nearTarget(e.containerPoint) ?? id);
+        return;
+      }
       if (this.pair) {
         // In the game only the two contenders answer clicks, and no popup gives it away.
         if (id === this.pair.red || id === this.pair.blue) cb.onPairClick(id);
@@ -78,6 +90,11 @@ export class MapView {
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       // The same DOM click also reaches the map after hitting a street; ignore that one.
       if (e.originalEvent.timeStamp === this.lastStreetClickAt || this.pair) return;
+      if (this.find) {
+        const hit = this.nearTarget(e.containerPoint);
+        if (hit) cb.onFindClick(hit);
+        return;
+      }
       cb.onEmptyClick();
     });
   }
@@ -105,6 +122,7 @@ export class MapView {
 
   clear() {
     this.endPair();
+    this.endFind();
     // Street ids repeat across cities ("הרצל#0"); main sets the new city's home again.
     this.homeId = null;
     this.walked = new Set();
@@ -197,6 +215,7 @@ export class MapView {
 
   /** Shows two streets in red and blue, everything else faded, both in view. */
   showPair(redId: string, blueId: string) {
+    this.endFind();
     this.endPair();
     this.select(null);
     this.map.closePopup(); // an open popup would give the length away
@@ -245,6 +264,109 @@ export class MapView {
     this.placeHomeMarker();
   }
 
+  // --- "Find it!" game ---
+
+  /** A new round: the whole city in view, every street tappable, no popups. */
+  startFind(targets: string[]) {
+    this.endPair();
+    this.endFind();
+    this.select(null);
+    this.map.closePopup();
+    this.find = { targets, marked: new Set(), markers: [] };
+    if (this.boundary) {
+      this.map.fitBounds(this.boundary.getBounds(), { padding: [12, 12], animate: false });
+    }
+  }
+
+  /** A wrong tap: that street turns red, so it is clear which one was tapped. */
+  markWrong(id: string) {
+    if (!this.find) return;
+    this.find.marked.add(id);
+    this.layers.get(id)?.setStyle(pairStyle(PAIR_COLORS.red, 6)).bringToFront();
+  }
+
+  /** A clue: zooms in on the street's neighbourhood, without showing which line it is. */
+  clue(ids: string[]) {
+    const longest = this.longestOf(ids);
+    if (!longest) return;
+    // At least one level closer, so the clue is visible even for a street as long as the city.
+    const zoom = Math.min(16, Math.max(this.map.getZoom() + 1, 15));
+    this.map.setView(midpointOf(longest), zoom);
+  }
+
+  /**
+   * The street to find, when a tap is close enough to it. At city zoom streets crowd
+   * together and another line may sit on top, so a near miss counts.
+   */
+  private nearTarget(at: L.Point): string | null {
+    for (const id of this.find?.targets ?? []) {
+      const line = this.layers.get(id);
+      if (!line) continue;
+      for (const part of line.getLatLngs() as L.LatLng[][]) {
+        const pts = part.map((ll) => this.map.latLngToContainerPoint(ll));
+        for (let i = 1; i < pts.length; i++) {
+          if (L.LineUtil.pointToSegmentDistance(at, pts[i - 1]!, pts[i]!) <= FIND_SLACK_PX) {
+            return id;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private longestOf(ids: string[]): L.Polyline | null {
+    let longest: L.Polyline | null = null;
+    for (const id of ids) {
+      const line = this.layers.get(id);
+      if (line && (!longest || lengthOf(line) > lengthOf(longest))) longest = line;
+    }
+    return longest;
+  }
+
+  /** Shows the street to find: thick, in front, with a marker, in view. */
+  revealFind(ids: string[], found: boolean) {
+    if (!this.find) return;
+    for (const id of ids) {
+      const line = this.layers.get(id);
+      if (!line) continue;
+      this.find.marked.add(id);
+      line.setStyle(found ? FOUND_STYLE : pairStyle(HIGHLIGHT_STYLE.color!, 9)).bringToFront();
+    }
+    const longest = this.longestOf(ids);
+    if (!longest) return;
+    this.find.markers.push(
+      L.marker(midpointOf(longest), {
+        icon: L.divIcon({
+          className: 'map-emoji trophy',
+          html: `<span>${found ? '🎯' : '📍'}</span>`,
+          iconSize: [36, 36],
+        }),
+        interactive: false,
+        keyboard: false,
+      }).addTo(this.map),
+    );
+    const bounds = this.boundsOf(ids);
+    if (bounds) this.map.fitBounds(bounds.pad(0.4), { maxZoom: 16 });
+  }
+
+  /** Back to the normal map. */
+  endFind() {
+    if (!this.find) return;
+    for (const m of this.find.markers) m.remove();
+    for (const id of this.find.marked) this.layers.get(id)?.setStyle(this.styleFor(id));
+    this.find = null;
+  }
+
+  private boundsOf(ids: string[]): L.LatLngBounds | null {
+    let bounds: L.LatLngBounds | null = null;
+    for (const id of ids) {
+      const b = this.layers.get(id)?.getBounds();
+      if (b)
+        bounds = bounds ? bounds.extend(b) : L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+    }
+    return bounds;
+  }
+
   /** Ids of the streets currently drawn (for the debug hook and tests). */
   drawnIds(): string[] {
     return [...this.layers.keys()];
@@ -255,6 +377,14 @@ export class MapView {
     const line = this.layers.get(id);
     return line ? this.map.latLngToContainerPoint(midpointOf(line)) : null;
   }
+}
+
+function lengthOf(line: L.Polyline): number {
+  let len = 0;
+  for (const p of line.getLatLngs() as L.LatLng[][]) {
+    for (let i = 1; i < p.length; i++) len += p[i - 1]!.distanceTo(p[i]!);
+  }
+  return len;
 }
 
 /** A point on the street's longest segment, so the popup sits on the line itself. */

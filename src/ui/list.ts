@@ -5,6 +5,7 @@ import { bdi } from './dom';
 import { formatLength } from './format';
 import { cityName, streetName } from './names';
 import { STICKERS, earnedStickers, walkProgress, walkedIn } from '../kids/walked';
+import { LETTERS, availableLetters, cityAlphabet, collectedLetters } from '../kids/alphabet';
 import type { State, Store } from './store';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -176,18 +177,60 @@ export function mountList(root: HTMLElement, store: Store, onRowClick: (id: stri
     // A sliver stays visible from the first street, so progress can be seen at all.
     fill.style.width = progress.count ? `${Math.max(2, Math.min(100, pct))}%` : '0';
     bar.append(fill);
+    const alphabet = cityAlphabet(s.result.streets);
+    const letters = alphabet ? collectedLetters(s.result.streets, walked, alphabet) : null;
+    const available = alphabet ? availableLetters(s.result.streets, alphabet) : null;
     const count = el(
       'span',
       'sticker-count',
       `🏅 ${tr.stickersLabel(earned.size, STICKERS.length)}`,
     );
+    if (letters && available) {
+      count.append(el('span', 'letter-count', `✏️ ${letters.size}/${available.size}`));
+    }
     walkCard.querySelector('summary')!.replaceChildren(title, line, bar, count);
+    renderAlphabet(alphabet, letters, available);
 
     walkCard.querySelector('.sticker-grid')!.replaceChildren(
       ...STICKERS.map((st) => {
         const li = el('li', `sticker${earned.has(st.id) ? ' earned' : ''}`);
         li.append(el('span', 'sticker-emoji', st.emoji), el('span', 'sticker-label', st.label(tr)));
         li.setAttribute('aria-label', `${st.label(tr)}${earned.has(st.id) ? ' ✓' : ''}`);
+        return li;
+      }),
+    );
+  }
+
+  /** The alef-bet hunt: a cell per letter, filled by the walked street that earned it. */
+  function renderAlphabet(
+    alphabet: ReturnType<typeof cityAlphabet>,
+    letters: Map<string, Street> | null,
+    available: Set<string> | null,
+  ) {
+    const section = walkCard.querySelector<HTMLElement>('.alphabet')!;
+    section.hidden = !alphabet;
+    if (!alphabet || !letters || !available) return;
+    const tr = t();
+    section.querySelector('.alphabet-title')!.textContent =
+      `${tr.alphabetTitle} · ${tr.alphabetCount(letters.size, available.size)}`;
+    section.querySelector('.alphabet-hint')!.textContent = tr.alphabetHint;
+    const grid = section.querySelector<HTMLElement>('.letter-grid')!;
+    // The letters keep their own direction: alef on the right, A on the left.
+    grid.dir = alphabet === 'he' ? 'rtl' : 'ltr';
+    grid.lang = alphabet;
+    grid.replaceChildren(
+      ...LETTERS[alphabet].map((letter) => {
+        const street = letters.get(letter);
+        const missing = !available.has(letter);
+        const li = el('li', `letter${street ? ' earned' : ''}${missing ? ' missing' : ''}`);
+        li.append(el('span', 'letter-char', letter));
+        if (street) {
+          const name = el('span', 'letter-street');
+          name.append(bdi(streetName(street)));
+          li.append(name);
+          li.title = tr.letterFrom(letter, streetName(street));
+        } else if (missing) li.title = tr.letterMissing;
+        li.setAttribute('aria-label', li.title || letter);
         return li;
       }),
     );
