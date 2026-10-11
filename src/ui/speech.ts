@@ -12,18 +12,28 @@ const synth: SpeechSynthesis | undefined =
 // Android reports Hebrew with the legacy code "iw".
 const LANG_CODES: Record<Lang, string[]> = { he: ['he', 'iw'], en: ['en'] };
 
-/** The best voice for a language: a local one in the main region first. */
+/**
+ * How good a voice sounds, from its name: neural voices (Edge's "Microsoft Hila Online
+ * (Natural)") far above Apple's "Premium" and "Enhanced", and those above the basic ones.
+ */
+export function voiceQuality(v: Pick<SpeechSynthesisVoice, 'name'>): number {
+  if (/natural|neural/i.test(v.name)) return 3;
+  if (/premium/i.test(v.name)) return 2;
+  if (/enhanced/i.test(v.name)) return 1;
+  return 0;
+}
+
+/** The best voice for a language: the best-sounding, then the main region, then local. */
 export function voiceFor(lang: Lang): SpeechSynthesisVoice | undefined {
   const voices = synth?.getVoices() ?? [];
   const matching = voices.filter((v) =>
     LANG_CODES[lang].some((code) => v.lang.toLowerCase().replace('_', '-').startsWith(code)),
   );
   const preferredRegion = lang === 'he' ? /-(il)$/i : /-(us|gb)$/i;
-  return (
-    matching.find((v) => v.localService && preferredRegion.test(v.lang)) ??
-    matching.find((v) => preferredRegion.test(v.lang)) ??
-    matching[0]
-  );
+  const score = (v: SpeechSynthesisVoice) =>
+    voiceQuality(v) * 4 + (preferredRegion.test(v.lang) ? 2 : 0) + (v.localService ? 1 : 0);
+  // Stable: among equals, the browser's order (its default first) is kept.
+  return [...matching].sort((a, b) => score(b) - score(a))[0];
 }
 
 /** Resolves once voices are known (Chrome loads them asynchronously). */

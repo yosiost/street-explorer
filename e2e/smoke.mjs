@@ -63,6 +63,14 @@ const fakeSpeech = () => {
   const voices = [
     { lang: 'en-US', name: 'Samantha', voiceURI: 'Samantha', localService: true, default: true },
     { lang: 'he-IL', name: 'Carmit', voiceURI: 'Carmit', localService: true },
+    { lang: 'he-IL', name: 'Carmit (Enhanced)', voiceURI: 'Carmit-e', localService: true },
+    // Edge's neural voice: online, but far better; it must win over both Carmits.
+    {
+      lang: 'he-IL',
+      name: 'Microsoft Hila Online (Natural) - Hebrew (Israel)',
+      voiceURI: 'Hila',
+      localService: false,
+    },
   ];
   window.__spoken = [];
   window.__voices = [];
@@ -563,10 +571,10 @@ const fakeSpeech = () => {
   check(
     await page.evaluate(() =>
       window.__voices.every(
-        (v, i) => v === 'Carmit' || !/[\u0590-\u05FF]/.test(window.__spoken[i]),
+        (v, i) => v.startsWith('Microsoft Hila') || !/[\u0590-\u05FF]/.test(window.__spoken[i]),
       ),
     ),
-    'Hebrew text is always read by the Hebrew voice',
+    'Hebrew text is always read by the best Hebrew voice (neural over Enhanced over basic)',
   );
   await page.click('#lang-toggle');
   const html = await page.evaluate(() => ({
