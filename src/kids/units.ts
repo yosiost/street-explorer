@@ -75,6 +75,9 @@ export function voiceFor(text: string): VoiceLang {
   return LATIN.test(text) ? 'en' : 'other';
 }
 
+/** Ends a sentence with a full stop, unless it has its own. */
+export const sentence = (text: string): string => (/[.!?]$/.test(text) ? text : `${text}.`);
+
 /** A sentence in the UI language. */
 export const say = (text: string): SpeechPart => ({ text, voice: getLang() });
 /** A name, in the voice of its own script. */
@@ -96,10 +99,14 @@ export function spokenStreet(
     // Plain digits: "6,600" can come out as "six comma six hundred".
     facts.push(vsHome ?? s.spokenKidSteps(kidSteps(street.lengthM)));
   }
-  const parts = [sayName(street.name), say(facts.join('. '))];
-  if (namesake) {
-    const p = namesake[getLang()];
-    parts.push(say(`${s.spokenNamedAfter(p.name)} ${p.about}`));
-  }
+  // One part per sentence, so each can be played from a recording (src/ui/recorded.ts).
+  const parts = [sayName(street.name), ...facts.map((f) => say(sentence(f)))];
+  if (namesake) parts.push(spokenNamesake(namesake));
   return parts;
+}
+
+/** "The street is named after …", with who they were. */
+export function spokenNamesake(namesake: Namesake): SpeechPart {
+  const p = namesake[getLang()];
+  return say(`${t().spokenNamedAfter(p.name)} ${p.about}`);
 }

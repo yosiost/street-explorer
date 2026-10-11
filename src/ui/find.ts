@@ -3,7 +3,7 @@ import { getLang, t } from '../i18n';
 import { findCandidates, isTarget, pickTarget } from '../kids/find';
 import { walkedIn } from '../kids/walked';
 import { findNamesake } from '../kids/namesakes';
-import { say as sayText, sayName, type SpeechPart } from '../kids/units';
+import { say as sayText, sayName, spokenNamesake, type SpeechPart } from '../kids/units';
 import { confetti } from './celebrate';
 import { bdi } from './dom';
 import { button, el, readVoicePref, writeVoicePref } from './game';
@@ -201,9 +201,7 @@ export function mountFind(panel: HTMLElement, store: Store, mapView: MapView) {
 
   function namesakeSpeech(): SpeechPart[] {
     const person = target && findNamesake(target);
-    if (!person) return [];
-    const p = person[getLang()];
-    return [sayText(`${t().spokenNamedAfter(p.name)} ${p.about}`)];
+    return person ? [spokenNamesake(person)] : [];
   }
 
   function start() {

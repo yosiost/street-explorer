@@ -5,6 +5,8 @@
  * - OSM map tiles are network-first too, with the copy last seen as the offline fallback,
  *   as the OSM tile policy allows (no prefetching, nothing extra downloaded). The tile
  *   cache is capped.
+ * - Hebrew read-aloud recordings are cached as they are first played, in a cache of their
+ *   own that survives app updates (a clip's name is a hash of its text).
  * - Overpass and Nominatim are not touched: city data lives in IndexedDB already.
  *
  * Built by the plugin in vite.config.ts, which fills in the file list and version.
@@ -14,6 +16,7 @@ const PRECACHE = __PRECACHE__;
 const APP_CACHE = `app-${VERSION}`;
 const TILE_CACHE = 'tiles-v1';
 const TILE_LIMIT = 800;
+const AUDIO_CACHE = 'audio-v1';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -44,6 +47,8 @@ self.addEventListener('fetch', (event) => {
 
   if (url.hostname === 'tile.openstreetmap.org') {
     event.respondWith(networkFirst(req, TILE_CACHE, true));
+  } else if (url.origin === self.location.origin && /\/audio\/.*\.mp3$/.test(url.pathname)) {
+    event.respondWith(cacheFirst(req, AUDIO_CACHE));
   } else if (url.origin === self.location.origin) {
     event.respondWith(
       req.mode === 'navigate' ? networkFirst(req, APP_CACHE, false, './') : cacheFirst(req),
@@ -51,11 +56,11 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-async function cacheFirst(req) {
+async function cacheFirst(req, cacheName = APP_CACHE) {
   const hit = await caches.match(req, { ignoreSearch: true, ignoreVary: true });
   if (hit) return hit;
   const res = await fetch(req);
-  if (res.ok) (await caches.open(APP_CACHE)).put(req, res.clone());
+  if (res.ok) (await caches.open(cacheName)).put(req, res.clone());
   return res;
 }
 

@@ -23,7 +23,9 @@ function serviceWorker(): Plugin {
     enforce: 'post',
     generateBundle(_, bundle) {
       const built = Object.keys(bundle).filter((f) => !f.endsWith('.map'));
-      const files = [...new Set(['index.html', ...built, ...publicFiles()])].sort();
+      // Recordings (a few MB) are cached as they are first played, not all at install.
+      const precached = publicFiles().filter((f) => !/^audio\/.*\.mp3$/.test(f));
+      const files = [...new Set(['index.html', ...built, ...precached])].sort();
       const hash = createHash('sha256');
       for (const f of built) hash.update(f);
       for (const f of publicFiles()) hash.update(readFileSync(join('public', f)));

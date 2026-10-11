@@ -1,10 +1,13 @@
 import { getLang, type Lang } from '../i18n';
 import type { SpeechPart } from '../kids/units';
+import { hasRecordings, playRecorded, recordingsFor, stopRecorded } from './recorded';
 
 /**
- * Read-aloud with the browser's built-in voices. Each piece is read by a voice chosen
- * explicitly for its language (never the browser default, which is usually English), and
- * read-aloud is only offered when the UI language has a voice.
+ * Read-aloud. In Hebrew, from recordings when every part has one (./recorded.ts);
+ * otherwise with the browser's built-in voices, each piece read by a voice chosen
+ * explicitly for its language (never the browser default, which is usually English).
+ * One sentence is never split between a recording and a device voice. Read-aloud is
+ * only offered when the UI language has a voice or recordings.
  */
 const synth: SpeechSynthesis | undefined =
   typeof window !== 'undefined' ? window.speechSynthesis : undefined;
@@ -48,13 +51,27 @@ export function whenVoicesReady(): Promise<void> {
 
 /** Read-aloud is available in the current UI language. */
 export function canSpeak(): boolean {
-  return !!voiceFor(getLang());
+  return !!voiceFor(getLang()) || (getLang() === 'he' && hasRecordings());
 }
+
+const debug = () => new URLSearchParams(location.search).has('debug');
 
 /** Speaks the parts in order, cutting off anything still being read. */
 export function speak(parts: SpeechPart[]): void {
-  if (!synth || !canSpeak()) return;
-  synth.cancel();
+  if (!canSpeak()) return;
+  stopSpeaking();
+  const recorded = getLang() === 'he' ? recordingsFor(parts) : null;
+  if (recorded) {
+    if (debug()) console.info(`[speech] recorded: ${parts.map((p) => p.text).join(' | ')}`);
+    // Offline and never played before: the device voice, if there is one.
+    void playRecorded(recorded, parts).then((ok) => ok || speakWithVoice(parts));
+    return;
+  }
+  speakWithVoice(parts);
+}
+
+function speakWithVoice(parts: SpeechPart[]): void {
+  if (!synth || !voiceFor(getLang())) return;
   for (const part of parts) {
     const u = new SpeechSynthesisUtterance(part.text);
     const voice = part.voice === 'other' ? undefined : voiceFor(part.voice);
@@ -63,7 +80,7 @@ export function speak(parts: SpeechPart[]): void {
       u.lang = voice.lang;
     }
     u.rate = 0.9; // a little slower, for a young listener
-    if (new URLSearchParams(location.search).has('debug')) {
+    if (debug()) {
       console.info(
         `[speech] ${voice?.name ?? 'default voice'} (${voice?.lang ?? '?'}): ${part.text}`,
       );
@@ -74,4 +91,5 @@ export function speak(parts: SpeechPart[]): void {
 
 export function stopSpeaking(): void {
   synth?.cancel();
+  stopRecorded();
 }

@@ -2,7 +2,7 @@ import { GAME_RECENT_ROUNDS } from '../config';
 import type { Street } from '../geo/streets';
 import { gameCandidates, minRatioFor, pickPair, type Pair } from '../kids/pair';
 import { t } from '../i18n';
-import { formatRatio, say as sayText, sayName, type SpeechPart } from '../kids/units';
+import { formatRatio, say as sayText, sayName, sentence, type SpeechPart } from '../kids/units';
 import { confetti } from './celebrate';
 import { bdi } from './dom';
 import { formatLength } from './format';
@@ -199,7 +199,7 @@ export function mountGame(panel: HTMLElement, store: Store, mapView: MapView) {
         say([
           sayText(right ? s.spokenRight : s.almost(s.sideWord[winnerSide])),
           sayName(streetName(winner)),
-          sayText(`${formatRatio(winner.lengthM, loser.lengthM)}.`),
+          sayText(sentence(formatRatio(winner.lengthM, loser.lengthM))),
         ]);
       },
       reduce ? 0 : RACE_MS + 150,

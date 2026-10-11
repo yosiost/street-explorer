@@ -28,6 +28,7 @@ import { MapView } from './ui/map';
 import { mountPicker } from './ui/picker';
 import { popupContent } from './ui/popup';
 import { streetName } from './ui/names';
+import { loadRecordings } from './ui/recorded';
 import { canSpeak, speak, whenVoicesReady } from './ui/speech';
 import { mountStatus } from './ui/status';
 import { createStore, type LoadingStep, type State } from './ui/store';
@@ -187,7 +188,9 @@ store.subscribe((s, prev) => {
   }
 });
 
-void whenVoicesReady().then(() => store.set({ canSpeak: canSpeak() }));
+void Promise.all([whenVoicesReady(), loadRecordings()]).then(() =>
+  store.set({ canSpeak: canSpeak() }),
+);
 
 // --- Language: עברית / English ---
 

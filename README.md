@@ -76,9 +76,14 @@ Refresh it with `npm run snapshot` (cities in `BUNDLED_CITY_IDS`).
      kid ("Herzl dreamed of a country for the Jewish people…"), and read it aloud. The list
      is hand-written (`kids/namesakes.ts`, 95 people) because OSM rarely has
      `name:etymology`; it covers 77 of Kfar Saba's 421 streets.
-   - **🔊 Read aloud:** popups and the game can read names and lengths aloud with the
-     browser's built-in voices. A Hebrew voice reads Hebrew and an English voice reads
-     English, so a Hebrew street name is read in Hebrew even in the English UI.
+   - **🔊 Read aloud:** popups and the games read names and lengths aloud. In Hebrew,
+     everything the app says about Kfar Saba is played from recordings made ahead of time
+     with the open-source [Phonikud](https://phonikud.github.io) "Shaul" voice, which adds
+     vowels before speaking and so says names like רינגלבלום right
+     ([scripts/speech](scripts/speech/README.md)). Anything without a recording (other
+     cities' street names, English) uses the browser's built-in voices: a Hebrew voice
+     reads Hebrew and an English voice reads English, so a Hebrew street name is read in
+     Hebrew even in the English UI.
 5. **עברית / English:** the button at the end of the header switches the whole app,
    including direction (RTL/LTR), street and city names (OSM `name:en`, when the street
    has one), search results and the reading voice. The choice is remembered; `?lang=en`
@@ -153,6 +158,7 @@ src/
   kids/alphabet.ts     the street alphabet: first letters, letters collected
   kids/find.ts         picking the street to find
   kids/namesakes.ts    who streets are named after (hand-written list)
+  kids/phrases.ts      every Hebrew phrase the read-aloud can say, for recording
   i18n.ts              every UI string in Hebrew and English
   geo/boundary.ts      boundary ring assembly, spatial index, line clipping
   geo/streets.ts       naming, grouping, components, dedup, measuring, flags
@@ -160,6 +166,8 @@ src/
   geo/pipeline.ts      one city: raw Overpass JSON → streets
   worker.ts            runs the pipeline off the main thread
   ui/                  picker, map, list, popup, game, speech, loading/error, debug
+  ui/recorded.ts       plays the Hebrew recordings (public/audio/he)
+scripts/speech/        makes the Hebrew recordings
 ```
 
 ## Data and attribution
@@ -167,7 +175,9 @@ src/
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright),
 available under the ODbL. Search by [Nominatim](https://nominatim.org/), used within its
 [usage policy](https://operations.osmfoundation.org/policies/nominatim/): one request per
-second at most, and only when you ask for a search. Tiles come from the OSM standard tile layer. Lengths are only
+second at most, and only when you ask for a search. The Hebrew recordings were made with
+the [Phonikud](https://github.com/thewh1teagle/phonikud-tts) diacritizer and "Shaul" voice,
+whose models are licensed for non-commercial use only. Tiles come from the OSM standard tile layer. Lengths are only
 as good as OSM tagging. If the debug panel shows a mapping mistake (a wrong name, a
 roundabout without `junction=roundabout`, a missing `oneway`), the best fix is to edit
 OSM itself.

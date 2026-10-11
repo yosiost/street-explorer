@@ -5,3 +5,4 @@ package-lock.json
 test/fixtures
 DESIGN.md
 public/data
+public/audio

@@ -55,6 +55,13 @@ const rowNames = (page) =>
 const selectedName = (page) =>
   page.$eval('.street-list .selected .name', (e) => e.firstChild?.textContent).catch(() => null);
 
+/** Waits until the read-aloud has said this (recordings play once downloaded). */
+const heard = (page, text) =>
+  page
+    .waitForFunction((t) => window.__spoken.join(' ').includes(t), text, { timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+
 const browser = await chromium.launch();
 const errors = [];
 
@@ -89,6 +96,37 @@ const fakeSpeech = () => {
       this.text = text;
     }
   };
+
+  // Hebrew recordings: follow each clip from download to playback, and note its text.
+  const urlOf = new WeakMap();
+  const readBuffer = Response.prototype.arrayBuffer;
+  Response.prototype.arrayBuffer = async function () {
+    const data = await readBuffer.call(this);
+    urlOf.set(data, this.url);
+    return data;
+  };
+  const decode = AudioContext.prototype.decodeAudioData;
+  AudioContext.prototype.decodeAudioData = async function (data) {
+    const url = urlOf.get(data);
+    const buffer = await decode.call(this, data);
+    urlOf.set(buffer, url);
+    return buffer;
+  };
+  let texts = null;
+  const start = AudioBufferSourceNode.prototype.start;
+  AudioBufferSourceNode.prototype.start = function (...args) {
+    const id = urlOf.get(this.buffer)?.match(/(\w+)\.mp3$/)?.[1];
+    window.__spoken.push(texts?.[id] ?? id);
+    window.__voices.push('recorded');
+    return start.apply(this, args);
+  };
+  // Not on about:blank, before the app's page is there.
+  if (location.protocol.startsWith('http')) {
+    fetch('audio/he/index.json')
+      .then((r) => r.json())
+      .then((j) => (texts = Object.fromEntries(Object.entries(j.clips).map(([t, id]) => [id, t]))))
+      .catch(() => {});
+  }
 };
 
 // ---------- Desktop happy path ----------
@@ -310,6 +348,7 @@ const fakeSpeech = () => {
     `other streets compare to ours: ${popupText.match(/⭐[^👣]*/u)?.[0]}`,
   );
   await page.click('.street-popup .speak');
+  await heard(page, 'הרחוב שלנו');
   const spoken = await page.evaluate(() => window.__spoken.join(' | '));
   check(
     spoken.includes('סיפן') && spoken.includes('מטר') && spoken.includes('הרחוב שלנו'),
@@ -319,9 +358,7 @@ const fakeSpeech = () => {
   await openRow('ויצמן');
   await page.click('.street-popup .speak');
   check(
-    (await page.evaluate(() => window.__spoken.join(' | '))).includes(
-      'הרחוב נקרא על שם חיים ויצמן',
-    ),
+    await heard(page, 'הרחוב נקרא על שם חיים ויצמן'),
     'read-aloud says who the street is named after',
   );
   await page.keyboard.press('Escape');
@@ -342,11 +379,7 @@ const fakeSpeech = () => {
     redName !== blueName && Math.max(redLen, blueLen) / Math.min(redLen, blueLen) >= 2,
     `round 1 is easy: ${redName} ${Math.round(redLen)} m vs ${blueName} ${Math.round(blueLen)} m`,
   );
-  check(
-    (await page.evaluate(() => window.__spoken.at(-1))) !== undefined &&
-      (await page.evaluate(() => window.__spoken.join(' ').includes('מה יותר ארוך'))),
-    'the question is read aloud',
-  );
+  check(await heard(page, 'מה יותר ארוך'), 'the question is read aloud');
   await shot(page, '11-game-question');
   // Answer right with the button.
   await page.click(redLen > blueLen ? '.choice.red' : '.choice.blue');
@@ -447,10 +480,7 @@ const fakeSpeech = () => {
       .sort((a, b) => b - a),
   );
   check((await lengthOf(target1)) >= lengths[40], `round 1 asks about a long street: ${target1}`);
-  check(
-    await page.evaluate((n) => window.__spoken.join(' ').includes(`מצאו במפה את ${n}`), target1),
-    'the street to find is read aloud',
-  );
+  check(await heard(page, `מצאו במפה את ${target1}`), 'the street to find is read aloud');
   await shot(page, '18-find-question');
   let wp = await wrongPoint();
   await page.mouse.click(wp.x, wp.y);
@@ -571,10 +601,10 @@ const fakeSpeech = () => {
   check(
     await page.evaluate(() =>
       window.__voices.every(
-        (v, i) => v.startsWith('Microsoft Hila') || !/[\u0590-\u05FF]/.test(window.__spoken[i]),
+        (v, i) => v === 'recorded' || !/[\u0590-\u05FF]/.test(window.__spoken[i]),
       ),
     ),
-    'Hebrew text is always read by the best Hebrew voice (neural over Enhanced over basic)',
+    'in Kfar Saba, all Hebrew is played from the recordings',
   );
   await page.click('#lang-toggle');
   const html = await page.evaluate(() => ({

@@ -83,14 +83,18 @@ describe('read-aloud text', () => {
   it('reads name, length, direction and a comparison', () => {
     const parts = spokenStreet(street('ויצמן', 3_300), null);
     expect(parts[0]).toEqual({ text: 'ויצמן', voice: 'he' });
-    expect(parts[1]!.text).toBe('אורך 3.3 קילומטר. הולך מצפון לדרום. בערך 6600 צעדים של ילד');
+    expect(parts.slice(1).map((p) => p.text)).toEqual([
+      'אורך 3.3 קילומטר.',
+      'הולך מצפון לדרום.',
+      'בערך 6600 צעדים של ילד.',
+    ]);
   });
 
   it('compares with our street when there is one', () => {
-    const [, facts] = spokenStreet(street('ויצמן', 3_200), home);
-    expect(facts!.text).toContain('כמו 8 רחובות שלנו');
-    const [, own] = spokenStreet(street('home#0', 400), home);
-    expect(own!.text).toContain('וזה הרחוב שלנו!');
+    const [, , , vsHome] = spokenStreet(street('ויצמן', 3_200), home);
+    expect(vsHome!.text).toBe('כמו 8 רחובות שלנו, אחד אחרי השני.');
+    const [, , , own] = spokenStreet(street('home#0', 400), home);
+    expect(own!.text).toBe('וזה הרחוב שלנו!');
   });
 
   it('marks names in other scripts for another voice', () => {
@@ -115,12 +119,12 @@ describe('in English', () => {
   });
 
   it('reads aloud in English, Hebrew names still in the Hebrew voice', () => {
-    const [name, facts] = spokenStreet(street('ויצמן', 3_300), null);
+    const [name, ...facts] = spokenStreet(street('ויצמן', 3_300), null);
     expect(name).toEqual({ text: 'ויצמן', voice: 'he' });
-    expect(facts).toEqual({
-      text: '3.3 kilometers long. It goes from north to south. About 6600 kid steps',
-      voice: 'en',
-    });
+    expect(facts.map((p) => p.text).join(' ')).toBe(
+      '3.3 kilometers long. It goes from north to south. About 6600 kid steps.',
+    );
+    expect(facts.every((p) => p.voice === 'en')).toBe(true);
   });
 });
 
